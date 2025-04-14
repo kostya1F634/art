@@ -33,7 +33,7 @@ class Sidebar:
         )
         st.sidebar.number_input(
             self.t("acw"),
-            value=20.0,
+            value=10.0,
             help=self.t("acwh"),
             step=1.0,
             key="ac_size",
