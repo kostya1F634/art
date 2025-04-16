@@ -289,7 +289,7 @@ def interpret_score(score):
 def audio_processing():
     t = translation(st.session_state.get("language", "en"))
     pbar = st.progress(0, t["decoding_audio"])
-    audio = tempo.audio(st.session_state.upload)
+    audio = tempo.audio(st.session_state.upload, sr=st.session_state.sample_rate)
     pbar.progress(13, t["estimating_tempo"])
     dynamic_tempo = tempo.dynamic_tempo(
         audio,

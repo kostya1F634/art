@@ -2,21 +2,22 @@ import librosa
 import numpy as np
 import streamlit as st
 
+
 @st.cache_data
-def audio(path):
-    return librosa.load(path, sr=None)
+def audio(path, sr=48000):
+    return librosa.load(path, sr=sr)
 
 
 @st.cache_data
 def dynamic_tempo(
-        audio,
-        hop_length=512,
-        start_bpm=120.0,
-        std_bpm=1.0,
-        ac_size=8.0,
-        max_tempo=320.0,
-        aggregate=None,
-    ):
+    audio,
+    hop_length=512,
+    start_bpm=120.0,
+    std_bpm=1.0,
+    ac_size=8.0,
+    max_tempo=320.0,
+    aggregate=None,
+):
     y, sr = audio
     return librosa.feature.tempo(
         y=y,
@@ -31,17 +32,10 @@ def dynamic_tempo(
 
 
 @st.cache_data
-def time_tempo(
-        audio,
-        dynamic_tempo,
-        hop_length=512
-    ):
+def time_tempo(audio, dynamic_tempo, hop_length=512):
     y, sr = audio
-    return librosa.times_like(
-        dynamic_tempo,
-        sr=sr,
-        hop_length=hop_length
-    )
+    return librosa.times_like(dynamic_tempo, sr=sr, hop_length=hop_length)
+
 
 @st.cache_data
 def intervals(onset_bpm, onset_times):
@@ -56,21 +50,23 @@ def intervals(onset_bpm, onset_times):
     intervals += [[start, onset_times[-1], curr_tempo]]
     return intervals
 
+
 @st.cache_data
 def onset_bpm(dynamic_bpm, onset_times, time_tempo):
     onset_times = np.array(onset_times)
-    indices = np.searchsorted(time_tempo, onset_times, side='right') - 1
+    indices = np.searchsorted(time_tempo, onset_times, side="right") - 1
     indices = np.clip(indices, 0, len(dynamic_bpm) - 1)
     return dynamic_bpm[indices]
 
+
 @st.cache_data
 def music(
-        audio,
-        dynamic_clicks,
-        volume=20,
-        click_freq=660.0,
-        click_duration=0.1,
-    ):
+    audio,
+    dynamic_clicks,
+    volume=20,
+    click_freq=660.0,
+    click_duration=0.1,
+):
     y, sr = audio
     click_dynamic = dynamic_clicks
     volume_reduce = volume / 100
@@ -81,14 +77,9 @@ def music(
         combined_audio = combined_audio / max_amplitude
     return combined_audio, sr
 
+
 @st.cache_data
-def dynamic_clicks(
-        audio,
-        dynamic_times,
-        hop_length,
-        click_freq,
-        click_duration
-    ):
+def dynamic_clicks(audio, dynamic_times, hop_length, click_freq, click_duration):
     y, sr = audio
     return librosa.clicks(
         times=dynamic_times,
@@ -99,16 +90,17 @@ def dynamic_clicks(
         length=len(y),
     )
 
+
 @st.cache_data
 def onset_times(
-        audio,
-        dynamic_tempo,
-        hop_length=512,
-        start_bpm=120.0,
-        tightness=100.0,
-        trim=True,
-        units="time",
-    ):
+    audio,
+    dynamic_tempo,
+    hop_length=512,
+    start_bpm=120.0,
+    tightness=100.0,
+    trim=True,
+    units="time",
+):
     y, sr = audio
     return librosa.beat.beat_track(
         y=y,

@@ -78,7 +78,8 @@
     "window_size": "Window size (smooth plot)",
     "intervals_format": "Intervals in OSU TimingPoints format",
     "beats_format": "Beats in OSU TimingPoints format",
-    "copy": "Copy (TimingPoints)"
+    "copy": "Copy (TimingPoints)",
+    "sample_rate": "Sample rate"
 
   },
   "ru": {
@@ -160,6 +161,7 @@
     "window_size": "Размер окна (сглаженный график)",
     "intervals_format": "Интервалы в OSU TimingPoints формате",
     "beats_format": "Удары в OSU TimingPoints формате",
-    "copy": "Копировать (TimingPoints)"
+    "copy": "Копировать (TimingPoints)",
+    "sample_rate": "Частота дискретизации"
   }
 }
