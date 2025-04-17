@@ -83,7 +83,7 @@ class Dashboard:
                     self.t("complexity_score") + " " + interpret_score(score)[0], score
                 )
             with col_changes:
-                st.metric("BPM Changes", len(intervals) - 1)
+                st.metric(self.t("bpm_change"), len(intervals) - 1)
             with st.container(border=True):
                 x, y = onset_times, onset_bpm
                 data = {
@@ -116,7 +116,7 @@ class Dashboard:
                 )
                 fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
-            with st.expander(self.t("timings")):
+            with st.expander(self.t("timings") + f" ({len(intervals)})"):
                 data = {self.t("time"): [], "BPM": []}
                 for start, bpm in intervals:
                     data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
@@ -127,18 +127,24 @@ class Dashboard:
         with beatmap:
             with st.container(border=True):
                 if st.session_state.beatmap_upload is None:
-                    st.subheader("Download beatmap")
+                    st.subheader(self.t("download_beatmap"))
                     title, artist = st.columns(2)
                     with title:
-                        st.text_input("Title", value="ART title", key="beatmap_title")
+                        st.text_input(
+                            self.t("beatmap_title"),
+                            value="ART title",
+                            key="beatmap_title",
+                        )
                     with artist:
                         st.text_input(
-                            "Artist", value="ART artist", key="beatmap_artist"
+                            self.t("beatmap_artist"),
+                            value="ART artist",
+                            key="beatmap_artist",
                         )
                 if st.session_state.beatmap_upload is None:
                     osu_name = f"{st.session_state.beatmap_artist} - {st.session_state.beatmap_title} (ART) [].osz"
                     st.download_button(
-                        label="Classic timings",
+                        label=self.t("c_timings"),
                         data=osu_beatmap("c", intervals),
                         file_name=osu_name,
                         mime="application/zip",
@@ -146,13 +152,13 @@ class Dashboard:
                     )
                 else:
                     st.download_button(
-                        label="Classic timings",
+                        label=self.t("c_timings"),
                         data=insert_choise("c", intervals),
                         file_name=st.session_state.beatmap_upload.name,
                         mime=st.session_state.beatmap_upload.type,
                         key="download_uploaded_beatmap",
                     )
-                if st.button("Neural network timings", key="nn_download"):
+                if st.button(self.t("nn_timings"), key="nn_download"):
                     pass
         with general:
             col_info, col_image = st.columns(2, border=True)

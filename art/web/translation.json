@@ -8,7 +8,7 @@
     "classic": "Classic algorithm",
     "nn": "Neural network",
     "overview": "General information",
-    "choose_file": "Choose an audio file",
+    "choose_file": "Choose an AUDIO or BEATMAP file",
     "music": "Metronome",
     "two": "Trim Weak Beats",
     "twoh": "Trim leading/trailing beats with weak beats.",
@@ -82,12 +82,15 @@
     "sample_rate": "Sample rate",
     "beatmap": "Beatmap",
     "c_timings": "Classic timings",
-    "nn_timings": "NN timings",
+    "nn_timings": "Neural Network timings",
     "timings": "Timings",
     "c_method": "Classic method",
-    "nn_method": "NN method",
-    "time_intervals": "Time intervals"
-
+    "nn_method": "Neural network method",
+    "time_intervals": "Time intervals",
+    "bpm_change": "BPM changes",
+    "download_beatmap": "Download beatmap",
+    "beatmap_title": "Title",
+    "beatmap_artist": "Artist"
   },
   "ru": {
     "title": "ART",
@@ -98,7 +101,7 @@
     "classic": "Классический алгоритм",
     "nn": "Нейронная сеть",
     "overview": "Общая информация",
-    "choose_file": "Выберите аудио файл",
+    "choose_file": "Выберите АУДИО или БИТМАП файл",
     "music": "Метроном",
     "two": "Отсечь слабые удары",
     "twoh": "Удаляет слабые начальные и конечные удары в треке.",
@@ -172,10 +175,14 @@
     "sample_rate": "Частота дискретизации",
     "beatmap": "Битмап",
     "c_timings": "Классические тайминиги",
-    "nn_timings": "НС тайминиги",
+    "nn_timings": "Нейросетевые тайминиги",
     "timings": "Тайминиги",
     "c_method": "Классический метод",
-    "nn_method": "НС метод",
-    "time_intervals": "Временные интервалы"
+    "nn_method": "Нейросетевой метод",
+    "time_intervals": "Временные интервалы",
+    "bpm_change": "Изменения BPM",
+    "download_beatmap": "Скачать битмап",
+    "beatmap_title": "Название",
+    "beatmap_artist": "Артист"
   }
 }
