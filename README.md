@@ -1,6 +1,6 @@
 ![art_logo](https://github.com/user-attachments/assets/e88ee84a-7c6c-451c-89f9-63aaec99b59d)
 # ART - 🎶 dynamic BPM analyzer
-ART provides a web interface to analyze dynamic BPM
+ART provides a web interface to analyze dynamic BPM and export beatmaps with it
 * 🤖 Automatic find timings (beats and BPM)
 * ⬇️ Download beatmap already with timings or insert it in your beatmap
 * 📥 Add timings in your beatmap
