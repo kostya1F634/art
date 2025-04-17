@@ -1,5 +1,7 @@
 import zipfile
 import os
+import magic
+import streamlit as st
 from mutagen import File
 from mutagen.mp3 import MP3
 from mutagen.flac import FLAC
@@ -29,7 +31,6 @@ def extract_cover(uploaded_file):
         covr = audio.tags.get("covr")
         if covr:
             return covr[0]
-
     return None
 
 
@@ -45,8 +46,10 @@ def extract_audio_from_zip(zip_path: str, audio_filename: str = "audio.mp3") -> 
 
 
 def is_archive(uploaded_file):
-    try:
-        with zipfile.ZipFile(uploaded_file, "r") as zip_ref:
-            return True
-    except zipfile.BadZipFile:
+    if isinstance(uploaded_file, str):
+        _, ext = os.path.splitext(uploaded_file)
+    elif hasattr(uploaded_file, "name"):
+        _, ext = os.path.splitext(uploaded_file.name)
+    else:
         return False
+    return ext.lower() in [".olz", ".osz", ".osu"]

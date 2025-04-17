@@ -1,5 +1,5 @@
 from web.translation import translation
-from web.utils import extract_cover
+from web.utils import extract_cover, is_archive, extract_audio_from_zip
 from timings import insert_timing_points, create_beatmap
 import tempo
 import pyperclip
@@ -19,7 +19,33 @@ class Dashboard:
     def render(self):
         st.title(self.t("title"))
         st.subheader(self.t("subtitle"))
+        with st.container(border=True):
+            upload_file = st.file_uploader(
+                self.t("choose_file"),
+                type=[
+                    "wav",
+                    "mp3",
+                    "flac",
+                    "ogg",
+                    "m4a",
+                    "wma",
+                    "aiff",
+                    "aif",
+                    "olz",
+                    "osz",
+                    "osu",
+                ],
+            )
+            if st.session_state.upload != upload_file:
+                st.session_state.upload = upload_file
+                st.rerun()
         if st.session_state.get("upload", None) is not None:
+            if is_archive(st.session_state.upload):
+                path_to_audio = extract_audio_from_zip(st.session_state.upload)
+                st.session_state.beatmap_upload = st.session_state.upload
+                st.session_state.upload = path_to_audio
+            else:
+                st.session_state.beatmap_upload = None
             (
                 dynamic_bpm,
                 onset_times,
@@ -29,19 +55,8 @@ class Dashboard:
                 music_sr,
             ) = audio_processing()
         else:
-            with st.container(border=True):
-                st.file_uploader(
-                    self.t("choose_file"),
-                    type=["wav", "mp3", "flac", "ogg", "m4a", "wma", "aiff", "aif"],
-                    key="upload",
-                )
             return
         with st.container(border=True):
-            st.file_uploader(
-                self.t("choose_file"),
-                type=["wav", "mp3", "flac", "ogg", "m4a", "wma", "aiff", "aif"],
-                key="upload",
-            )
             st.write(self.t("audio_clicks"))
             st.audio(music_y, sample_rate=music_sr)
         classic, nn, beatmap, general = st.tabs(
@@ -55,7 +70,7 @@ class Dashboard:
         with classic:
             time_diffs = np.diff(onset_times)
             score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
-            col_average, col_onset, col_score = st.columns(3, border=True)
+            col_average, col_onset, col_score, col_changes = st.columns(4, border=True)
             with col_average:
                 st.metric(f"{self.t('average')} BPM", round(np.mean(dynamic_bpm), 2))
             with col_onset:
@@ -67,6 +82,8 @@ class Dashboard:
                 st.metric(
                     self.t("complexity_score") + " " + interpret_score(score)[0], score
                 )
+            with col_changes:
+                st.metric("BPM Changes", len(intervals) - 1)
             with st.container(border=True):
                 x, y = onset_times, onset_bpm
                 data = {
@@ -109,12 +126,6 @@ class Dashboard:
             st.write("In development")
         with beatmap:
             with st.container(border=True):
-                st.file_uploader(
-                    "Choose beatmap (optional)",
-                    type=["olz", "osz"],
-                    key="beatmap_upload",
-                )
-            with st.container(border=True):
                 if st.session_state.beatmap_upload is None:
                     st.subheader("Download beatmap")
                     title, artist = st.columns(2)
@@ -125,7 +136,7 @@ class Dashboard:
                             "Artist", value="ART artist", key="beatmap_artist"
                         )
                 if st.session_state.beatmap_upload is None:
-                    osu_name = f"{st.session_state.beatmap_artist} - {st.session_state.beatmap_title} (ART) [].osu"
+                    osu_name = f"{st.session_state.beatmap_artist} - {st.session_state.beatmap_title} (ART) [].osz"
                     st.download_button(
                         label="Classic timings",
                         data=osu_beatmap("c", intervals),

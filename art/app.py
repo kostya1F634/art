@@ -9,5 +9,10 @@ st.set_page_config(
     layout="wide",
 )
 
+if "upload" not in st.session_state:
+    st.session_state.upload = None
+if "beatmap_upload" not in st.session_state:
+    st.session_state.beatmap_upload = None
+
 Sidebar().render()
 Dashboard().render()
