@@ -44,10 +44,10 @@ def intervals(onset_bpm, onset_times):
     curr_tempo = onset_bpm[0]
     for time, tempo in zip(onset_times[1:], onset_bpm[1:]):
         if round(curr_tempo, 2) != round(tempo, 2):
-            intervals += [[start, time, curr_tempo]]
+            intervals += [[start, curr_tempo]]
             start = time
             curr_tempo = tempo
-    intervals += [[start, onset_times[-1], curr_tempo]]
+    intervals += [[start, curr_tempo]]
     return intervals
 
 

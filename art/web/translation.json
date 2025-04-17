@@ -47,7 +47,7 @@
     "high": "high",
     "bpm_range": "BPM range",
     "intervals": "Intervals",
-    "twod_plot": "Charts",
+    "c_charts": "Charts",
     "threed_plot": "3D plot",
     "onset_and_bpm": "Beats and BPM",
     "blowout": "Replace blowout with mode",
@@ -79,7 +79,14 @@
     "intervals_format": "Intervals in OSU TimingPoints format",
     "beats_format": "Beats in OSU TimingPoints format",
     "copy": "Copy (TimingPoints)",
-    "sample_rate": "Sample rate"
+    "sample_rate": "Sample rate",
+    "beatmap": "Beatmap",
+    "c_timings": "Classic timings",
+    "nn_timings": "NN timings",
+    "timings": "Timings",
+    "c_method": "Classic method",
+    "nn_method": "NN method",
+    "time_intervals": "Time intervals"
 
   },
   "ru": {
@@ -130,7 +137,7 @@
     "high": "высокая",
     "bpm_range": "Диапазон BPM",
     "intervals": "Интервалы",
-    "twod_plot": "Графики",
+    "c_charts": "Графики",
     "threed_plot": "3D график",
     "onset_and_bpm": "Удары и BPM",
     "blowout": "Заменить выбросы на моду",
@@ -162,6 +169,13 @@
     "intervals_format": "Интервалы в OSU TimingPoints формате",
     "beats_format": "Удары в OSU TimingPoints формате",
     "copy": "Копировать (TimingPoints)",
-    "sample_rate": "Частота дискретизации"
+    "sample_rate": "Частота дискретизации",
+    "beatmap": "Битмап",
+    "c_timings": "Классические тайминиги",
+    "nn_timings": "НС тайминиги",
+    "timings": "Тайминиги",
+    "c_method": "Классический метод",
+    "nn_method": "НС метод",
+    "time_intervals": "Временные интервалы"
   }
 }

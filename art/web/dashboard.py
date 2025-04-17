@@ -1,5 +1,6 @@
 from web.translation import translation
 from web.utils import extract_cover
+from timings import insert_timing_points, create_beatmap
 import tempo
 import pyperclip
 import streamlit as st
@@ -43,16 +44,15 @@ class Dashboard:
             )
             st.write(self.t("audio_clicks"))
             st.audio(music_y, sample_rate=music_sr)
-        twod_plot, nn, intervals_tab, onset_and_bpm, general = st.tabs(
+        classic, nn, beatmap, general = st.tabs(
             [
-                self.t("twod_plot"),
-                self.t("nn"),
-                self.t("intervals"),
-                self.t("onset_and_bpm"),
+                self.t("c_method"),
+                self.t("nn_method"),
+                self.t("beatmap"),
                 self.t("overview"),
             ]
         )
-        with twod_plot:
+        with classic:
             time_diffs = np.diff(onset_times)
             score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
             col_average, col_onset, col_score = st.columns(3, border=True)
@@ -82,7 +82,7 @@ class Dashboard:
                 )
                 fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
-            with st.container(border=True):
+            with st.expander(self.t("time_intervals")):
                 data = {
                     "x": onset_times[1:],
                     "y": time_diffs,
@@ -99,31 +99,51 @@ class Dashboard:
                 )
                 fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
-        with intervals_tab:
-            timing_points_string = timing_points(intervals)
-            with st.expander(self.t("intervals_format")):
-                st.text(timing_points_string)
-            if st.button(self.t("copy"), key="intervals_copy"):
-                pyperclip.copy(timing_points_string)
-            data = {self.t("start"): [], self.t("end"): [], "BPM": []}
-            for start, end, bpm in intervals:
-                data[self.t("start")] += [f"{start:.3f}".replace(".", ",")]
-                data[self.t("end")] += [f"{end:.3f}".replace(".", ",")]
-                data["BPM"] += [str(round(bpm, 2))]
-            st.table(data)
-        with onset_and_bpm:
-            beat_timing_points_string = beat_timing_points(onset_times, onset_bpm)
-            with st.expander(self.t("beats_format")):
-                st.text(beat_timing_points_string)
-            if st.button(self.t("copy"), key="beats_copy"):
-                pyperclip.copy(beat_timing_points_string)
-            onset_bpm_table = {f"{self.t('onset')} (s)": [], "BPM": []}
-            for time, bpm in zip(onset_times, onset_bpm):
-                onset_bpm_table[f"{self.t('onset')} (s)"] += [
-                    str(round(time, 3)).replace(".", ",")
-                ]
-                onset_bpm_table["BPM"] += [str(round(bpm, 2))]
-            st.table(onset_bpm_table)
+            with st.expander(self.t("timings")):
+                data = {self.t("time"): [], "BPM": []}
+                for start, bpm in intervals:
+                    data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
+                    data["BPM"] += [str(round(bpm, 2))]
+                st.table(data)
+        with nn:
+            st.write("In development")
+        with beatmap:
+            with st.container(border=True):
+                st.file_uploader(
+                    self.t("choose_file"),
+                    type=["olz", "osz"],
+                    key="beatmap_upload",
+                )
+            with st.container(border=True):
+                if st.session_state.beatmap_upload is None:
+                    st.write("Default beatmap")
+                    title, artist = st.columns(2)
+                    with title:
+                        st.text_input("Title", value="ART title", key="beatmap_title")
+                    with artist:
+                        st.text_input(
+                            "Artist", value="ART artist", key="beatmap_artist"
+                        )
+                st.write("Download beatmap with timings")
+                if st.session_state.beatmap_upload is None:
+                    osu_name = f"{st.session_state.beatmap_artist} - {st.session_state.beatmap_title} (ART) [].osu"
+                    st.download_button(
+                        label="Classic timings",
+                        data=osu_beatmap("c", intervals),
+                        file_name=osu_name,
+                        mime="application/zip",
+                        key="download_new_beatmap",
+                    )
+                else:
+                    st.download_button(
+                        label="Classic timings",
+                        data=insert_choise("c", intervals),
+                        file_name=st.session_state.beatmap_upload.name,
+                        mime=st.session_state.beatmap_upload.type,
+                        key="download_uploaded_beatmap",
+                    )
+                if st.button("Neural network timings", key="nn_download"):
+                    pass
         with general:
             col_info, col_image = st.columns(2, border=True)
             with col_info:
@@ -151,8 +171,6 @@ class Dashboard:
                     st.image(cover_data)
                 else:
                     st.info(self.t("no_track_cover"))
-        with nn:
-            st.write("In development")
 
 
 def complexity_score(bpm_values, duration_sec, time_diffs):
@@ -261,20 +279,21 @@ def audio_processing():
     )
 
 
-def timing_points(intervals):
-    result = []
-    for interval in intervals:
-        start, end, bpm = interval
-        start_ms = int(start * 1000)
-        beat_length = 60000 / bpm
-        result.append(f"{start_ms},{beat_length},4,1,0,100,1,0")
-    return "\n".join(result)
+def insert_choise(source, intervals):
+    if source == "c":
+        insert_timing_points(st.session_state.beatmap_upload, intervals)
+        return st.session_state.beatmap_upload.getvalue()
+    elif source == "nn":
+        pass
 
 
-def beat_timing_points(beat_times, beat_bpm):
-    result = []
-    for time, bpm in zip(beat_times, beat_bpm):
-        start_ms = int(time * 1000)
-        beat_length = 60000 / bpm
-        result.append(f"{start_ms},{beat_length},4,1,0,100,1,0")
-    return "\n".join(result)
+def osu_beatmap(source, intervals):
+    if source == "c":
+        return create_beatmap(
+            st.session_state.upload,
+            st.session_state.beatmap_title,
+            st.session_state.beatmap_artist,
+            intervals,
+        )
+    elif source == "nn":
+        pass
