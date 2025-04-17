@@ -110,13 +110,13 @@ class Dashboard:
         with beatmap:
             with st.container(border=True):
                 st.file_uploader(
-                    self.t("choose_file"),
+                    "Choose beatmap (optional)",
                     type=["olz", "osz"],
                     key="beatmap_upload",
                 )
             with st.container(border=True):
                 if st.session_state.beatmap_upload is None:
-                    st.write("Default beatmap")
+                    st.subheader("Download beatmap")
                     title, artist = st.columns(2)
                     with title:
                         st.text_input("Title", value="ART title", key="beatmap_title")
@@ -124,7 +124,6 @@ class Dashboard:
                         st.text_input(
                             "Artist", value="ART artist", key="beatmap_artist"
                         )
-                st.write("Download beatmap with timings")
                 if st.session_state.beatmap_upload is None:
                     osu_name = f"{st.session_state.beatmap_artist} - {st.session_state.beatmap_title} (ART) [].osu"
                     st.download_button(
