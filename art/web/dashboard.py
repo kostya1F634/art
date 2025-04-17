@@ -1,3 +1,4 @@
+import sys
 from web.translation import translation
 from web.utils import extract_cover, is_archive, extract_audio_from_zip
 from timings import insert_timing_points, create_beatmap
@@ -123,7 +124,31 @@ class Dashboard:
                     data["BPM"] += [str(round(bpm, 2))]
                 st.table(data)
         with nn:
-            st.write("In development")
+            if sys.platform.startswith("win"):
+                st.write("Available only on linux/macOS")
+            else:
+                trashold = 0
+                nn_avg_bpm, nn_re_intervals = tempo.nn_re_intervals(
+                    st.session_state.upload, trashold=trashold
+                )
+                confidence, nn_btmf_intervals = tempo.nn_btmf_intervals(
+                    st.session_state.upload, trashold=trashold
+                )
+                nn_btmf_data = {self.t("time"): [], "BPM": []}
+                for start, bpm in nn_btmf_intervals:
+                    nn_btmf_data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
+                    nn_btmf_data["BPM"] += [str(round(bpm, 2))]
+                nn_re_data = {self.t("time"): [], "BPM": []}
+                for start, bpm in nn_re_intervals:
+                    nn_re_data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
+                    nn_re_data["BPM"] += [str(round(bpm, 2))]
+                st.write(confidence)
+                st.write(nn_avg_bpm)
+                btmf, re = st.columns(2)
+                with btmf:
+                    st.table(nn_btmf_data)
+                with re:
+                    st.table(nn_re_data)
         with beatmap:
             with st.container(border=True):
                 if st.session_state.beatmap_upload is None:
