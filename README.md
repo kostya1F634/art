@@ -7,8 +7,8 @@ ART provides a web interface to analyze dynamic BPM
 * ⚙️ A lot of parameters of BPM distribution
 * 📊 Table of time intervals with BPM
 
-![image_app](https://github.com/user-attachments/assets/1a92dcd7-2fd7-40e8-8689-2e39293076ac)
-![app_intervals_image](https://github.com/user-attachments/assets/5da21034-0784-4c47-88be-04aa8232d2a4)
+![art_main_page_image](https://github.com/user-attachments/assets/4ea27e86-4c06-4ec3-9ca4-0d1286221496)
+![art_download_beatmap_image](https://github.com/user-attachments/assets/a4834968-cb7f-4a25-b80d-74bb69d214e1)
 
 ## Requirements
 * git
