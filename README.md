@@ -13,7 +13,6 @@ ART provides a web interface to analyze dynamic BPM
 
 ## Requirements
 * git
-* python 3.10-3.13 (not necessary because uv install python itself, I guess)
 * uv
 * make (not necessary)
 ## Installation and Usage
