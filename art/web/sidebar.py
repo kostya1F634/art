@@ -25,7 +25,7 @@ class Sidebar:
         st.sidebar.header(t["parameters"], divider="grey")
         st.sidebar.number_input(
             self.t("sample_rate"),
-            value=48000,
+            value=100000,
             help=self.t("sample_rate"),
             min_value=250,
             step=10000,
@@ -33,7 +33,7 @@ class Sidebar:
         )
         st.sidebar.number_input(
             self.t("hop_length"),
-            value=512,
+            value=1024,
             help=self.t("hop_length_help"),
             min_value=1,
             step=50,
@@ -41,7 +41,7 @@ class Sidebar:
         )
         st.sidebar.number_input(
             self.t("acw"),
-            value=10.0,
+            value=20.0,
             help=self.t("acwh"),
             step=1.0,
             key="ac_size",

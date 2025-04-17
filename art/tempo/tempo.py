@@ -5,7 +5,7 @@ import streamlit as st
 
 @st.cache_data
 def audio(path, sr=48000):
-    return librosa.load(path, sr=sr)
+    return librosa.load(path, sr=sr, res_type="soxr_vhq")
 
 
 @st.cache_data

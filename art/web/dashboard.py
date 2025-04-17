@@ -9,7 +9,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy.stats import entropy
 from scipy.stats import mode
-from scipy.signal import savgol_filter
 
 
 class Dashboard:
