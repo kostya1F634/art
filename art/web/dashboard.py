@@ -43,10 +43,9 @@ class Dashboard:
             )
             st.write(self.t("audio_clicks"))
             st.audio(music_y, sample_rate=music_sr)
-        twod_plot, threed_plot, nn, intervals_tab, onset_and_bpm, general = st.tabs(
+        twod_plot, nn, intervals_tab, onset_and_bpm, general = st.tabs(
             [
                 self.t("twod_plot"),
-                self.t("threed_plot"),
                 self.t("nn"),
                 self.t("intervals"),
                 self.t("onset_and_bpm"),
@@ -99,35 +98,6 @@ class Dashboard:
                     },
                 )
                 fig.update_traces(line=dict(color="#003399"))
-                st.plotly_chart(fig)
-        with threed_plot:
-            with st.container(border=True):
-                x = np.array(onset_times)
-                y = np.array(onset_bpm)
-                z = np.diff(x, prepend=x[0])
-
-                fig = go.Figure(
-                    data=[
-                        go.Scatter3d(
-                            x=x,
-                            y=y,
-                            z=z,
-                            mode="lines+markers",
-                            marker=dict(size=4, color=z, colorscale="Viridis"),
-                            line=dict(color="royalblue", width=2),
-                        )
-                    ]
-                )
-
-                fig.update_layout(
-                    scene=dict(
-                        xaxis_title=self.t("time") + " (s)",
-                        yaxis_title="BPM",
-                        zaxis_title=self.t("intervals") + " (s)",
-                    ),
-                    title=self.t("three_plot"),
-                    margin=dict(l=0, r=0, b=0, t=30),
-                )
                 st.plotly_chart(fig)
         with intervals_tab:
             timing_points_string = timing_points(intervals)
