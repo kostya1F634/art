@@ -47,14 +47,29 @@ def create_beatmap(audio_file, title, artist, timing_points):
     osu_name = f"{artist} - {title} (ART) [].osu"
 
     with tempfile.TemporaryDirectory() as tmpdir:
+        # 1. Сохраняем аудиофайл во временную директорию
         audio_path = os.path.join(tmpdir, "audio.mp3")
+
         with open(audio_path, "wb") as f:
-            f.write(audio_file.read())
+            # Проверяем, является ли audio_file строкой (путь к файлу) или объектом файла
+            if isinstance(audio_file, str):
+                # Если передан путь к файлу, открываем его
+                with open(audio_file, "rb") as audio_f:
+                    f.write(audio_f.read())
+            else:
+                # Если это объект файла (например, BytesIO), читаем его
+                if hasattr(audio_file, "seek"):
+                    audio_file.seek(0)
+                f.write(audio_file.read())
+
+        # 2. Копируем и редактируем .osu файл
         osu_template_path = "art/template/template.osu"
         osu_target_path = os.path.join(tmpdir, osu_name)
         shutil.copy(osu_template_path, osu_target_path)
+
         with open(osu_target_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
+
         new_lines = []
         i = 0
         while i < len(lines):
@@ -78,12 +93,16 @@ def create_beatmap(audio_file, title, artist, timing_points):
                 continue
             i += 1
         new_lines.extend(lines[i:])
+
         with open(osu_target_path, "w", encoding="utf-8") as f:
             f.writelines(new_lines)
+
+        # 3. Создаем ZIP в памяти
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as zipf:
             zipf.write(audio_path, arcname="audio.mp3")
             zipf.write(osu_target_path, arcname=osu_name)
+
         buffer.seek(0)
         return buffer
 
