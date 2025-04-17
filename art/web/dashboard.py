@@ -4,11 +4,8 @@ import tempo
 import pyperclip
 import streamlit as st
 import numpy as np
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from scipy.stats import entropy
-from scipy.stats import mode
 
 
 class Dashboard:
@@ -58,9 +55,6 @@ class Dashboard:
         )
         with twod_plot:
             time_diffs = np.diff(onset_times)
-            time_diffs = trim_middle(
-                time_diffs, trim_percent=st.session_state.time_blowout / 100
-            )
             score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
             col_average, col_onset, col_score = st.columns(3, border=True)
             with col_average:
@@ -103,29 +97,6 @@ class Dashboard:
                         "x": self.t("time") + " (s)",
                         "y": self.t("time_between_onsets") + " (s)",
                     },
-                )
-                fig.update_traces(line=dict(color="#003399"))
-                st.plotly_chart(fig)
-            with st.container(border=True):
-                smoothed_y = smooth_data(
-                    time_diffs, window_size=st.session_state.window_size
-                )
-                fig = px.line(
-                    x=onset_times[1:][len(onset_times[1:]) - len(smoothed_y) :],
-                    y=smoothed_y,
-                    title=self.t("time_intervals_between_onsets_smooth"),
-                    labels={
-                        "x": self.t("time") + " (s)",
-                        "y": self.t("time_between_onsets") + " (s)",
-                    },
-                )
-                fig.update_layout(
-                    xaxis=dict(showgrid=True),
-                    yaxis=dict(
-                        showgrid=True,
-                        range=[min(smoothed_y) - 0.1, max(smoothed_y) + 0.1],
-                    ),
-                    title=self.t("time_intervals_between_onsets_smooth"),
                 )
                 fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
@@ -214,21 +185,6 @@ class Dashboard:
             st.write("In development")
 
 
-def trim_middle(x, trim_percent=0.25):
-    if trim_percent <= 0.0:
-        return x
-    x = np.array(x, dtype=float)
-    lower = np.percentile(x, 100 * trim_percent)
-    upper = np.percentile(x, 100 * (1 - trim_percent))
-    mask = (x >= lower) & (x <= upper)
-    if np.any(mask):
-        most_common = mode(x[mask], keepdims=True).mode[0]
-    else:
-        most_common = np.mean(x)
-    x[~mask] = most_common
-    return x
-
-
 def complexity_score(bpm_values, duration_sec, time_diffs):
     bpm_values = np.array(bpm_values)
     time_diffs = np.array(time_diffs)
@@ -240,7 +196,6 @@ def complexity_score(bpm_values, duration_sec, time_diffs):
     bpm_range = np.max(bpm_values) - np.min(bpm_values)
     acceleration = (bpm_values[-1] - bpm_values[0]) / duration_sec
     local_var = local_variability(bpm_values)
-    entropy_val = bpm_entropy(bpm_values)
     score = (
         0.2 * std_time * 50
         + 0.2 * std_bpm
@@ -249,7 +204,6 @@ def complexity_score(bpm_values, duration_sec, time_diffs):
         + 0.1 * bpm_range / 10
         + 0.1 * abs(acceleration)
         + 0.1 * local_var
-        + 0.1 * entropy_val * 10
     )
     return round(score, 2)
 
@@ -262,11 +216,6 @@ def local_variability(bpm_values, window_size=5):
         if len(bpm_values[i * window_size : (i + 1) * window_size]) > 1
     ]
     return np.mean(local_std) if local_std else 0
-
-
-def bpm_entropy(bpm_values):
-    hist, _ = np.histogram(bpm_values, bins=10, density=True)
-    return entropy(hist)
 
 
 def interpret_score(score):
@@ -313,7 +262,6 @@ def audio_processing():
     )
     pbar.progress(52, t["mapping_bpm_beats"])
     onset_bpm = tempo.onset_bpm(dynamic_bpm, onset_times, time_tempo)
-    onset_bpm = trim_middle(onset_bpm, trim_percent=st.session_state.blowout / 100)
     pbar.progress(65, t["detecting_intervals"])
     intervals = tempo.intervals(onset_bpm, onset_times)
     pbar.progress(78, t["generating_clicks"])
@@ -341,10 +289,6 @@ def audio_processing():
         music_y,
         music_sr,
     )
-
-
-def smooth_data(data, window_size=5):
-    return np.convolve(data, np.ones(window_size) / window_size, mode="valid")
 
 
 def timing_points(intervals):

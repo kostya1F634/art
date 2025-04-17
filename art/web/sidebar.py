@@ -101,27 +101,3 @@ class Sidebar:
             step=100.0,
             key="tightness",
         )
-        st.sidebar.number_input(
-            self.t("blowout"),
-            value=0.0,
-            help=self.t("blowout_help"),
-            min_value=0.0,
-            step=1.0,
-            key="blowout",
-        )
-        st.sidebar.number_input(
-            self.t("time_blowout"),
-            value=0.0,
-            help=self.t("time_blowout_help"),
-            min_value=0.0,
-            step=1.0,
-            key="time_blowout",
-        )
-        st.sidebar.number_input(
-            self.t("window_size"),
-            value=5,
-            help="window size for smooth",
-            min_value=1,
-            step=1,
-            key="window_size",
-        )
