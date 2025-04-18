@@ -67,9 +67,7 @@ class Dashboard:
             music_y,
             music_sr,
         ) = audio_processing()
-        nn_avg_bpm, nn_re_intervals, confidence, nn_btmf_intervals = (
-            nn_audio_processing()
-        )
+        nn_re = nn_audio_processing()
         time_diffs = np.diff(onset_times)
         score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
 
@@ -141,21 +139,15 @@ class Dashboard:
             if sys.platform.startswith("win"):
                 st.write("Available only on linux/macOS")
             else:
-                nn_btmf_data = {self.t("time"): [], "BPM": []}
-                for start, bpm in nn_btmf_intervals:
-                    nn_btmf_data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
-                    nn_btmf_data["BPM"] += [str(round(bpm, 2))]
-                nn_re_data = {self.t("time"): [], "BPM": []}
-                for start, bpm in nn_re_intervals:
-                    nn_re_data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
-                    nn_re_data["BPM"] += [str(round(bpm, 2))]
-                st.write(confidence)
-                st.write(nn_avg_bpm)
-                btmf, re = st.columns(2)
-                with btmf:
-                    st.table(nn_btmf_data)
-                with re:
-                    st.table(nn_re_data)
+                # nn_re_data = {self.t("time"): [], "BPM": []}
+                # for start, bpm in nn_re_intervals:
+                #     nn_re_data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
+                #     nn_re_data["BPM"] += [str(round(bpm, 2))]
+                # st.write(confidence)
+                # st.write(nn_avg_bpm)
+                # st.table(nn_re_data)
+                st.write(nn_re[1])
+
         with beatmap:
             with st.container(border=True):
                 if st.session_state.beatmap_upload is None:
@@ -329,16 +321,10 @@ def audio_processing():
 def nn_audio_processing():
     t = translation(st.session_state.get("language", "en"))
     pbar = st.progress(0, "Load 1")
-    nn_avg_bpm, nn_re_intervals = tempo.nn_re_intervals(
-        st.session_state.upload, trashold=0
-    )
-    pbar.progress(50, "Load 2")
-    confidence, nn_btmf_intervals = tempo.nn_btmf_intervals(
-        st.session_state.upload, trashold=0
-    )
+    nn_re = tempo.nn_re_intervals(st.session_state.upload, trashold=0)
     pbar.progress(100, "")
     pbar.empty()
-    return nn_avg_bpm, nn_re_intervals, confidence, nn_btmf_intervals
+    return nn_re
 
 
 def insert_choise(intervals):

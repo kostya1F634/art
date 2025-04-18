@@ -19,16 +19,6 @@ class Sidebar:
         )
         if st.session_state.get("upload", None) is None:
             return
-        c_tab, nn_tab = st.tabs(["Classic params", "Neural network params"])
-        with c_tab:
-            self.c_render()
-        with nn_tab:
-            self.nn_render()
-
-    def nn_render(self):
-        pass
-
-    def c_render(self):
         st.subheader(self.t("parameters"), divider="grey")
         st.number_input(
             self.t("sample_rate"),
