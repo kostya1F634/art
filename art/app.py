@@ -11,6 +11,8 @@ st.set_page_config(
 
 if "upload" not in st.session_state:
     st.session_state.upload = None
+if "upload_orig" not in st.session_state:
+    st.session_state.upload_orig = None
 if "beatmap_upload" not in st.session_state:
     st.session_state.beatmap_upload = None
 

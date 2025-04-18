@@ -1,7 +1,7 @@
 import zipfile
 import os
-import magic
-import streamlit as st
+import tempfile
+import shutil
 from mutagen import File
 from mutagen.mp3 import MP3
 from mutagen.flac import FLAC
@@ -9,12 +9,10 @@ from mutagen.mp4 import MP4
 
 
 def extract_cover(uploaded_file):
-    # Проверяем, является ли uploaded_file объектом с атрибутом .name (например, файла)
     if hasattr(uploaded_file, "name"):
         file_name = uploaded_file.name
     else:
-        file_name = ""  # Присваиваем пустую строку, если атрибута нет
-
+        file_name = ""
     audio = File(uploaded_file, easy=False)
     if audio is None:
         return None
@@ -53,3 +51,10 @@ def is_archive(uploaded_file):
     else:
         return False
     return ext.lower() in [".olz", ".osz", ".osu"]
+
+
+def save_uploaded_file(uploaded_file):
+    suffix = f".{uploaded_file.name.split('.')[-1]}"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        shutil.copyfileobj(uploaded_file, tmp)
+        return tmp.name

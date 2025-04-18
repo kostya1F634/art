@@ -1,6 +1,11 @@
 import sys
 from web.translation import translation
-from web.utils import extract_cover, is_archive, extract_audio_from_zip
+from web.utils import (
+    extract_cover,
+    is_archive,
+    extract_audio_from_zip,
+    save_uploaded_file,
+)
 from timings import insert_timing_points, create_beatmap
 import tempo
 import pyperclip
@@ -37,16 +42,19 @@ class Dashboard:
                     "osu",
                 ],
             )
-            if st.session_state.upload != upload_file:
+            if st.session_state.upload_orig != upload_file:
+                st.session_state.upload_orig = upload_file
                 st.session_state.upload = upload_file
+                if is_archive(st.session_state.upload):
+                    path_to_audio = extract_audio_from_zip(upload_file)
+                    st.session_state.beatmap_upload = upload_file
+                    st.session_state.upload = path_to_audio
+                else:
+                    path_to_audio = save_uploaded_file(upload_file)
+                    st.session_state.beatmap_upload = None
+                    st.session_state.upload = path_to_audio
                 st.rerun()
-        if st.session_state.get("upload", None) is not None:
-            if is_archive(st.session_state.upload):
-                path_to_audio = extract_audio_from_zip(st.session_state.upload)
-                st.session_state.beatmap_upload = st.session_state.upload
-                st.session_state.upload = path_to_audio
-            else:
-                st.session_state.beatmap_upload = None
+        if upload_file is not None:
             (
                 dynamic_bpm,
                 onset_times,
@@ -57,6 +65,7 @@ class Dashboard:
             ) = audio_processing()
         else:
             return
+
         with st.container(border=True):
             st.write(self.t("audio_clicks"))
             st.audio(music_y, sample_rate=music_sr)
@@ -166,11 +175,10 @@ class Dashboard:
                             value="ART artist",
                             key="beatmap_artist",
                         )
-                if st.session_state.beatmap_upload is None:
                     osu_name = f"{st.session_state.beatmap_artist} - {st.session_state.beatmap_title} (ART) [].osz"
                     st.download_button(
                         label=self.t("c_timings"),
-                        data=osu_beatmap("c", intervals),
+                        data=osu_beatmap(intervals),
                         file_name=osu_name,
                         mime="application/zip",
                         key="download_new_beatmap",
@@ -178,7 +186,7 @@ class Dashboard:
                 else:
                     st.download_button(
                         label=self.t("c_timings"),
-                        data=insert_choise("c", intervals),
+                        data=insert_choise(intervals),
                         file_name=st.session_state.beatmap_upload.name,
                         mime=st.session_state.beatmap_upload.type,
                         key="download_uploaded_beatmap",
@@ -320,21 +328,15 @@ def audio_processing():
     )
 
 
-def insert_choise(source, intervals):
-    if source == "c":
-        insert_timing_points(st.session_state.beatmap_upload, intervals)
-        return st.session_state.beatmap_upload.getvalue()
-    elif source == "nn":
-        pass
+def insert_choise(intervals):
+    insert_timing_points(st.session_state.beatmap_upload, intervals)
+    return st.session_state.beatmap_upload.getvalue()
 
 
-def osu_beatmap(source, intervals):
-    if source == "c":
-        return create_beatmap(
-            st.session_state.upload,
-            st.session_state.beatmap_title,
-            st.session_state.beatmap_artist,
-            intervals,
-        )
-    elif source == "nn":
-        pass
+def osu_beatmap(intervals):
+    return create_beatmap(
+        st.session_state.upload,
+        st.session_state.beatmap_title,
+        st.session_state.beatmap_artist,
+        intervals,
+    )

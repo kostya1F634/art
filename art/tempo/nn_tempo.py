@@ -3,9 +3,7 @@ import tempfile
 
 
 def nn_re_intervals(uploaded_file, trashold=0):
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-        tmp.write(uploaded_file.getbuffer())
-        tmp_path = tmp.name
+    tmp_path = uploaded_file
     audio = es.MonoLoader(filename=tmp_path)()
     rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
     bpm, _, _, _, beats = rhythm_extractor(audio)
@@ -25,9 +23,7 @@ def nn_re_intervals(uploaded_file, trashold=0):
 
 
 def nn_btmf_intervals(uploaded_file, trashold=0):
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-        tmp.write(uploaded_file.getbuffer())
-        tmp_path = tmp.name
+    tmp_path = uploaded_file
     audio = es.MonoLoader(filename=tmp_path)()
     bt = es.BeatTrackerMultiFeature()
     beats, confidence = bt(audio)
