@@ -1,7 +1,8 @@
 import essentia.standard as es
-import tempfile
+import streamlit as st
 
 
+@st.cache_data
 def nn_re_intervals(uploaded_file, trashold=0):
     tmp_path = uploaded_file
     audio = es.MonoLoader(filename=tmp_path)()
@@ -22,6 +23,7 @@ def nn_re_intervals(uploaded_file, trashold=0):
     return bpm, intervals
 
 
+@st.cache_data
 def nn_btmf_intervals(uploaded_file, trashold=0):
     tmp_path = uploaded_file
     audio = es.MonoLoader(filename=tmp_path)()

@@ -15,6 +15,8 @@ if "upload_orig" not in st.session_state:
     st.session_state.upload_orig = None
 if "beatmap_upload" not in st.session_state:
     st.session_state.beatmap_upload = None
+if "open_tab" not in st.session_state:
+    st.session_state.open_tab = "c"
 
 Sidebar().render()
 Dashboard().render()

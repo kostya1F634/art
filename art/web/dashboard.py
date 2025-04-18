@@ -1,4 +1,5 @@
 import sys
+import concurrent.futures
 from web.translation import translation
 from web.utils import (
     extract_cover,
@@ -63,23 +64,33 @@ class Dashboard:
                 music_y,
                 music_sr,
             ) = audio_processing()
+            nn_avg_bpm, nn_re_intervals, confidence, nn_btmf_intervals = (
+                nn_audio_processing()
+            )
+            time_diffs = np.diff(onset_times)
+            score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
         else:
             return
 
         with st.container(border=True):
             st.write(self.t("audio_clicks"))
             st.audio(music_y, sample_rate=music_sr)
-        classic, nn, beatmap, general = st.tabs(
-            [
-                self.t("c_method"),
-                self.t("nn_method"),
-                self.t("beatmap"),
-                self.t("overview"),
-            ]
-        )
-        with classic:
-            time_diffs = np.diff(onset_times)
-            score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
+        st.divider()
+        col_c, col_nn, col_b, col_g = st.columns(4)
+        with col_c:
+            if st.button(self.t("c_method"), key="c_stub", use_container_width=True):
+                st.session_state.open_tab = "c"
+        with col_nn:
+            if st.button(self.t("nn_method"), key="nn_stub", use_container_width=True):
+                st.session_state.open_tab = "nn"
+        with col_b:
+            if st.button(self.t("beatmap"), key="b_stub", use_container_width=True):
+                st.session_state.open_tab = "b"
+        with col_g:
+            if st.button(self.t("overview"), key="g_stub", use_container_width=True):
+                st.session_state.open_tab = "g"
+        st.divider()
+        if st.session_state.open_tab == "c":
             col_average, col_onset, col_score, col_changes = st.columns(4, border=True)
             with col_average:
                 st.metric(f"{self.t('average')} BPM", round(np.mean(dynamic_bpm), 2))
@@ -132,17 +143,10 @@ class Dashboard:
                     data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
                     data["BPM"] += [str(round(bpm, 2))]
                 st.table(data)
-        with nn:
+        if st.session_state.open_tab == "nn":
             if sys.platform.startswith("win"):
                 st.write("Available only on linux/macOS")
             else:
-                trashold = 0
-                nn_avg_bpm, nn_re_intervals = tempo.nn_re_intervals(
-                    st.session_state.upload, trashold=trashold
-                )
-                confidence, nn_btmf_intervals = tempo.nn_btmf_intervals(
-                    st.session_state.upload, trashold=trashold
-                )
                 nn_btmf_data = {self.t("time"): [], "BPM": []}
                 for start, bpm in nn_btmf_intervals:
                     nn_btmf_data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
@@ -158,7 +162,7 @@ class Dashboard:
                     st.table(nn_btmf_data)
                 with re:
                     st.table(nn_re_data)
-        with beatmap:
+        if st.session_state.open_tab == "b":
             with st.container(border=True):
                 if st.session_state.beatmap_upload is None:
                     st.subheader(self.t("download_beatmap"))
@@ -193,7 +197,7 @@ class Dashboard:
                     )
                 if st.button(self.t("nn_timings"), key="nn_download"):
                     pass
-        with general:
+        if st.session_state.open_tab == "g":
             col_info, col_image = st.columns(2, border=True)
             with col_info:
                 std_dev = np.std(dynamic_bpm)
@@ -326,6 +330,21 @@ def audio_processing():
         music_y,
         music_sr,
     )
+
+
+def nn_audio_processing():
+    t = translation(st.session_state.get("language", "en"))
+    pbar = st.progress(0, "Load 1")
+    nn_avg_bpm, nn_re_intervals = tempo.nn_re_intervals(
+        st.session_state.upload, trashold=0
+    )
+    pbar.progress(50, "Load 2")
+    confidence, nn_btmf_intervals = tempo.nn_btmf_intervals(
+        st.session_state.upload, trashold=0
+    )
+    pbar.progress(100, "")
+    pbar.empty()
+    return nn_avg_bpm, nn_re_intervals, confidence, nn_btmf_intervals
 
 
 def insert_choise(intervals):
