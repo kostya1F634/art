@@ -11,9 +11,9 @@ import streamlit as st
 
 
 @st.cache_data
-def nn_re_intervals(uploaded_file, trashold=0):
+def nn_re_intervals(uploaded_file, trashold=0, sample_rate=44100):
     tmp_path = uploaded_file
-    audio = es.MonoLoader(filename=tmp_path)()
+    audio = es.MonoLoader(filename=tmp_path, sampleRate=sample_rate)()
     rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
     bpm, ticks, confidence, estimates, bpmIntervals = rhythm_extractor(audio)
     intervals = []
@@ -31,4 +31,5 @@ def nn_re_intervals(uploaded_file, trashold=0):
     print(estimates)
     print(len(ticks))
     print(len(estimates))
+    print(len(bpmIntervals))
     return bpm, ticks, confidence, estimates, bpmIntervals

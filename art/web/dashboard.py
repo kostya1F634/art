@@ -59,82 +59,92 @@ class Dashboard:
         if upload_file is None:
             return
 
-        (
-            dynamic_bpm,
-            onset_times,
-            onset_bpm,
-            intervals,
-            music_y,
-            music_sr,
-        ) = audio_processing()
         nn_re = nn_audio_processing()
-        time_diffs = np.diff(onset_times)
-        score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
-
-        with st.container(border=True):
-            st.write(self.t("audio_clicks"))
-            st.audio(music_y, sample_rate=music_sr)
-        c_tab, nn_tab, beatmap, general = st.tabs(
+        if st.session_state.classic_on:
+            (
+                dynamic_bpm,
+                onset_times,
+                onset_bpm,
+                intervals,
+                music_y,
+                music_sr,
+            ) = audio_processing()
+            time_diffs = np.diff(onset_times)
+            score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
+        if st.session_state.classic_on:
+            with st.container(border=True):
+                st.write(self.t("audio_clicks"))
+                st.audio(music_y, sample_rate=music_sr)
+        nn_tab, c_tab, beatmap, general = st.tabs(
             [
-                self.t("c_method"),
                 self.t("nn_method"),
+                self.t("c_method"),
                 self.t("beatmap"),
                 self.t("overview"),
             ]
         )
         with c_tab:
-            col_average, col_onset, col_score, col_changes = st.columns(4, border=True)
-            with col_average:
-                st.metric(f"{self.t('average')} BPM", round(np.mean(dynamic_bpm), 2))
-            with col_onset:
-                st.metric(
-                    self.t("first_onset"),
-                    str(round(onset_times[0], 3)).replace(".", ","),
+            if st.session_state.classic_on:
+                col_average, col_onset, col_score, col_changes = st.columns(
+                    4, border=True
                 )
-            with col_score:
-                st.metric(
-                    self.t("complexity_score") + " " + interpret_score(score)[0], score
-                )
-            with col_changes:
-                st.metric(self.t("bpm_change"), len(intervals) - 1)
-            with st.container(border=True):
-                x, y = onset_times, onset_bpm
-                data = {
-                    "x": x,
-                    "y": y,
-                }
-                fig = px.line(
-                    data,
-                    x="x",
-                    y="y",
-                    title=self.t("bpm_dynamic"),
-                    labels={"x": self.t("time") + " (s)", "y": "BPM"},
-                )
-                fig.update_traces(line=dict(color="#003399"))
-                st.plotly_chart(fig)
-            with st.expander(self.t("time_intervals")):
-                data = {
-                    "x": onset_times[1:],
-                    "y": time_diffs,
-                }
-                fig = px.line(
-                    data,
-                    x="x",
-                    y="y",
-                    title=self.t("time_intervals_between_onsets"),
-                    labels={
-                        "x": self.t("time") + " (s)",
-                        "y": self.t("time_between_onsets") + " (s)",
-                    },
-                )
-                fig.update_traces(line=dict(color="#003399"))
-                st.plotly_chart(fig)
-            with st.expander(self.t("timings") + f" ({len(intervals)})"):
-                data = {self.t("time"): [], "BPM": []}
-                for start, bpm in intervals:
-                    data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
-                    data["BPM"] += [str(round(bpm, 2))]
-                st.table(data)
+                with col_average:
+                    st.metric(
+                        f"{self.t('average')} BPM", round(np.mean(dynamic_bpm), 2)
+                    )
+                with col_onset:
+                    st.metric(
+                        self.t("first_onset"),
+                        str(round(onset_times[0], 3)).replace(".", ","),
+                    )
+                with col_score:
+                    st.metric(
+                        self.t("complexity_score") + " " + interpret_score(score)[0],
+                        score,
+                    )
+                with col_changes:
+                    st.metric(self.t("bpm_change"), len(intervals) - 1)
+                with st.container(border=True):
+                    x, y = onset_times, onset_bpm
+                    data = {
+                        "x": x,
+                        "y": y,
+                    }
+                    fig = px.line(
+                        data,
+                        x="x",
+                        y="y",
+                        title=self.t("bpm_dynamic"),
+                        labels={"x": self.t("time") + " (s)", "y": "BPM"},
+                    )
+                    fig.update_traces(line=dict(color="#003399"))
+                    st.plotly_chart(fig)
+
+                with st.expander(self.t("time_intervals")):
+                    data = {
+                        "x": onset_times[1:],
+                        "y": time_diffs,
+                    }
+                    fig = px.line(
+                        data,
+                        x="x",
+                        y="y",
+                        title=self.t("time_intervals_between_onsets"),
+                        labels={
+                            "x": self.t("time") + " (s)",
+                            "y": self.t("time_between_onsets") + " (s)",
+                        },
+                    )
+                    fig.update_traces(line=dict(color="#003399"))
+                    st.plotly_chart(fig)
+                with st.expander(self.t("timings") + f" ({len(intervals)})"):
+                    data = {self.t("time"): [], "BPM": []}
+                    for start, bpm in intervals:
+                        data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
+                        data["BPM"] += [str(round(bpm, 2))]
+                    st.table(data)
+            else:
+                st.write('Turn on "Classic method')
         with nn_tab:
             if sys.platform.startswith("win"):
                 st.write("Available only on linux/macOS")
@@ -146,7 +156,23 @@ class Dashboard:
                 # st.write(confidence)
                 # st.write(nn_avg_bpm)
                 # st.table(nn_re_data)
-                st.write(nn_re[1])
+                st.write(nn_re[0])
+                st.write(nn_re[2])
+                fig = px.histogram(
+                    x=nn_re[3],
+                    nbins=30,  # увеличиваем количество бинов для более плотной гистограммы
+                    title="Distribution of BPM (estimates)",
+                    labels={"x": "BPM", "y": "Count"},
+                )
+
+                fig.update_layout(
+                    xaxis_title="BPM",
+                    yaxis_title="Frequency",
+                    bargap=0.02,  # уменьшаем расстояние между столбцами
+                    bargroupgap=0.0,
+                )
+
+                st.plotly_chart(fig)
 
         with beatmap:
             with st.container(border=True):
@@ -166,44 +192,49 @@ class Dashboard:
                             key="beatmap_artist",
                         )
                     osu_name = f"{st.session_state.beatmap_artist} - {st.session_state.beatmap_title} (ART) [].osz"
-                    st.download_button(
-                        label=self.t("c_timings"),
-                        data=osu_beatmap(intervals),
-                        file_name=osu_name,
-                        mime="application/zip",
-                        key="download_new_beatmap",
-                    )
+                    if st.session_state.classic_on:
+                        st.download_button(
+                            label=self.t("c_timings"),
+                            data=osu_beatmap(intervals),
+                            file_name=osu_name,
+                            mime="application/zip",
+                            key="download_new_beatmap",
+                        )
                 else:
-                    st.download_button(
-                        label=self.t("c_timings"),
-                        data=insert_choise(intervals),
-                        file_name=st.session_state.beatmap_upload.name,
-                        mime=st.session_state.beatmap_upload.type,
-                        key="download_uploaded_beatmap",
-                    )
+                    if st.session_state.classic_on:
+                        st.download_button(
+                            label=self.t("c_timings"),
+                            data=insert_choise(intervals),
+                            file_name=st.session_state.beatmap_upload.name,
+                            mime=st.session_state.beatmap_upload.type,
+                            key="download_uploaded_beatmap",
+                        )
                 if st.button(self.t("nn_timings"), key="nn_download"):
                     pass
         with general:
             col_info, col_image = st.columns(2, border=True)
             with col_info:
-                std_dev = np.std(dynamic_bpm)
-                if std_dev < 2:
-                    rhythmic_variance = self.t("low")
-                elif std_dev < 10:
-                    rhythmic_variance = self.t("moderate")
-                else:
-                    rhythmic_variance = self.t("high")
-                min_bpm = round(np.min(dynamic_bpm), 2)
-                max_bpm = round(np.max(dynamic_bpm), 2)
-                description = interpret_score(score)
-                st.metric(self.t("complexity_score"), score)
-                st.write(description)
-                st.divider()
-                st.write(f"{self.t('average')} BPM: {round(np.mean(dynamic_bpm), 2)}")
-                st.divider()
-                st.write(f"{self.t('bpm_range')}: {min_bpm} -> {max_bpm}")
-                st.divider()
-                st.write(f"{self.t('rhythmic_variance')}: {rhythmic_variance}")
+                if st.session_state.classic_on:
+                    std_dev = np.std(dynamic_bpm)
+                    if std_dev < 2:
+                        rhythmic_variance = self.t("low")
+                    elif std_dev < 10:
+                        rhythmic_variance = self.t("moderate")
+                    else:
+                        rhythmic_variance = self.t("high")
+                    min_bpm = round(np.min(dynamic_bpm), 2)
+                    max_bpm = round(np.max(dynamic_bpm), 2)
+                    description = interpret_score(score)
+                    st.metric(self.t("complexity_score"), score)
+                    st.write(description)
+                    st.divider()
+                    st.write(
+                        f"{self.t('average')} BPM: {round(np.mean(dynamic_bpm), 2)}"
+                    )
+                    st.divider()
+                    st.write(f"{self.t('bpm_range')}: {min_bpm} -> {max_bpm}")
+                    st.divider()
+                    st.write(f"{self.t('rhythmic_variance')}: {rhythmic_variance}")
             with col_image:
                 cover_data = extract_cover(st.session_state.upload)
                 if cover_data:
@@ -308,6 +339,7 @@ def audio_processing():
         click_duration=st.session_state.click_duration,
     )
     pbar.progress(100, "")
+    pbar.empty()
     return (
         dynamic_bpm,
         onset_times,
@@ -321,7 +353,9 @@ def audio_processing():
 def nn_audio_processing():
     t = translation(st.session_state.get("language", "en"))
     pbar = st.progress(0, "Load 1")
-    nn_re = tempo.nn_re_intervals(st.session_state.upload, trashold=0)
+    nn_re = tempo.nn_re_intervals(
+        st.session_state.upload, trashold=0, sample_rate=st.session_state.sample_rate
+    )
     pbar.progress(100, "")
     pbar.empty()
     return nn_re

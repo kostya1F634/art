@@ -18,8 +18,5 @@ if "beatmap_upload" not in st.session_state:
 if "open_tab" not in st.session_state:
     st.session_state.open_tab = "c"
 
-col_sidebar, col_dashboard = st.columns([1, 4], gap="large")
-with col_sidebar:
-    Sidebar().render()
-with col_dashboard:
-    Dashboard().render()
+Sidebar().render()
+Dashboard().render()
