@@ -7,6 +7,7 @@ from web.utils import (
     extract_audio_from_zip,
     save_uploaded_file,
 )
+from web.sidebar import Sidebar
 from timings import insert_timing_points, create_beatmap
 import tempo
 import pyperclip
@@ -55,42 +56,35 @@ class Dashboard:
                     st.session_state.beatmap_upload = None
                     st.session_state.upload = path_to_audio
                 st.rerun()
-        if upload_file is not None:
-            (
-                dynamic_bpm,
-                onset_times,
-                onset_bpm,
-                intervals,
-                music_y,
-                music_sr,
-            ) = audio_processing()
-            nn_avg_bpm, nn_re_intervals, confidence, nn_btmf_intervals = (
-                nn_audio_processing()
-            )
-            time_diffs = np.diff(onset_times)
-            score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
-        else:
+        if upload_file is None:
             return
+
+        (
+            dynamic_bpm,
+            onset_times,
+            onset_bpm,
+            intervals,
+            music_y,
+            music_sr,
+        ) = audio_processing()
+        nn_avg_bpm, nn_re_intervals, confidence, nn_btmf_intervals = (
+            nn_audio_processing()
+        )
+        time_diffs = np.diff(onset_times)
+        score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
 
         with st.container(border=True):
             st.write(self.t("audio_clicks"))
             st.audio(music_y, sample_rate=music_sr)
-        st.divider()
-        col_c, col_nn, col_b, col_g = st.columns(4)
-        with col_c:
-            if st.button(self.t("c_method"), key="c_stub", use_container_width=True):
-                st.session_state.open_tab = "c"
-        with col_nn:
-            if st.button(self.t("nn_method"), key="nn_stub", use_container_width=True):
-                st.session_state.open_tab = "nn"
-        with col_b:
-            if st.button(self.t("beatmap"), key="b_stub", use_container_width=True):
-                st.session_state.open_tab = "b"
-        with col_g:
-            if st.button(self.t("overview"), key="g_stub", use_container_width=True):
-                st.session_state.open_tab = "g"
-        st.divider()
-        if st.session_state.open_tab == "c":
+        c_tab, nn_tab, beatmap, general = st.tabs(
+            [
+                self.t("c_method"),
+                self.t("nn_method"),
+                self.t("beatmap"),
+                self.t("overview"),
+            ]
+        )
+        with c_tab:
             col_average, col_onset, col_score, col_changes = st.columns(4, border=True)
             with col_average:
                 st.metric(f"{self.t('average')} BPM", round(np.mean(dynamic_bpm), 2))
@@ -143,7 +137,7 @@ class Dashboard:
                     data[self.t("time")] += [f"{start:.3f}".replace(".", ",")]
                     data["BPM"] += [str(round(bpm, 2))]
                 st.table(data)
-        if st.session_state.open_tab == "nn":
+        with nn_tab:
             if sys.platform.startswith("win"):
                 st.write("Available only on linux/macOS")
             else:
@@ -162,7 +156,7 @@ class Dashboard:
                     st.table(nn_btmf_data)
                 with re:
                     st.table(nn_re_data)
-        if st.session_state.open_tab == "b":
+        with beatmap:
             with st.container(border=True):
                 if st.session_state.beatmap_upload is None:
                     st.subheader(self.t("download_beatmap"))
@@ -197,7 +191,7 @@ class Dashboard:
                     )
                 if st.button(self.t("nn_timings"), key="nn_download"):
                     pass
-        if st.session_state.open_tab == "g":
+        with general:
             col_info, col_image = st.columns(2, border=True)
             with col_info:
                 std_dev = np.std(dynamic_bpm)
