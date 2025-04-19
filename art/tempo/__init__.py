@@ -8,4 +8,4 @@ from .tempo import (
     onset_bpm,
     onset_times,
 )
-from .nn_tempo import nn_re_intervals
+from .nn_tempo import re, nn_intervals

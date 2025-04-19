@@ -1,5 +1,4 @@
-from web.dashboard import Dashboard
-from web.sidebar import Sidebar
+from web import render_sidebar, render_dashboard
 import streamlit as st
 
 
@@ -18,5 +17,5 @@ if "beatmap_upload" not in st.session_state:
 if "open_tab" not in st.session_state:
     st.session_state.open_tab = "c"
 
-Sidebar().render()
-Dashboard().render()
+render_sidebar()
+render_dashboard()

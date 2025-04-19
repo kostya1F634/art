@@ -2,3 +2,4 @@
 **/__pycache__/
 tracks
 temp_audio
+.pytest_cache

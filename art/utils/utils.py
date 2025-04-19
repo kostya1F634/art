@@ -8,12 +8,12 @@ from mutagen.flac import FLAC
 from mutagen.mp4 import MP4
 
 
-def extract_cover(uploaded_file):
-    if hasattr(uploaded_file, "name"):
-        file_name = uploaded_file.name
+def cover_from_audio(file):
+    if hasattr(file, "name"):
+        file_name = file.name
     else:
         file_name = ""
-    audio = File(uploaded_file, easy=False)
+    audio = File(file, easy=False)
     if audio is None:
         return None
     if audio.tags is None:
@@ -32,7 +32,7 @@ def extract_cover(uploaded_file):
     return None
 
 
-def extract_audio_from_zip(zip_path: str, audio_filename: str = "audio.mp3") -> str:
+def audio_from_zip(zip_path: str, audio_filename: str = "audio.mp3") -> str:
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         file_list = zip_ref.namelist()
         if audio_filename not in file_list:
@@ -43,18 +43,18 @@ def extract_audio_from_zip(zip_path: str, audio_filename: str = "audio.mp3") -> 
         return os.path.join(temp_dir, audio_filename)
 
 
-def is_archive(uploaded_file):
-    if isinstance(uploaded_file, str):
-        _, ext = os.path.splitext(uploaded_file)
-    elif hasattr(uploaded_file, "name"):
-        _, ext = os.path.splitext(uploaded_file.name)
+def is_archive(file):
+    if isinstance(file, str):
+        _, ext = os.path.splitext(file)
+    elif hasattr(file, "name"):
+        _, ext = os.path.splitext(file.name)
     else:
         return False
     return ext.lower() in [".olz", ".osz", ".osu"]
 
 
-def save_uploaded_file(uploaded_file):
-    suffix = f".{uploaded_file.name.split('.')[-1]}"
+def save_file(file):
+    suffix = f".{file.name.split('.')[-1]}"
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        shutil.copyfileobj(uploaded_file, tmp)
+        shutil.copyfileobj(file, tmp)
         return tmp.name
