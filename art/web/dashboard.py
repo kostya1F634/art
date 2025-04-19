@@ -71,7 +71,7 @@ def render_dashboard():
     )
     with c_tab:
         if st.session_state.classic_on:
-            col_average, col_onset, col_score, col_changes = st.columns(4, border=True)
+            col_average, col_onset, col_changes = st.columns(3, border=True)
             with col_average:
                 unique_bpm, counts = np.unique(dynamic_bpm, return_counts=True)
                 most_common_bpm_index = np.argmax(counts)
@@ -80,12 +80,7 @@ def render_dashboard():
             with col_onset:
                 st.metric(
                     t["first_onset"],
-                    str(round(onset_times[0], 3)).replace(".", ","),
-                )
-            with col_score:
-                st.metric(
-                    t["complexity_score"],
-                    round(nn_re[1], 4),
+                    str(round(onset_times[0] * 1000)).replace(".", ","),
                 )
             with col_changes:
                 st.metric(t["bpm_change"], len(intervals) - 1)
@@ -138,7 +133,7 @@ def render_dashboard():
         with col_nn_onset:
             st.metric(
                 t["first_onset"],
-                str(round(nn_re[2][0], 3)).replace(".", ","),
+                str(round(nn_re[2][0] * 1000)).replace(".", ","),
             )
         with col_nn_confidence:
             st.metric("Confidence in BPM", round(nn_re[1], 4))
