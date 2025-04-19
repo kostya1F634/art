@@ -32,7 +32,7 @@ def render_dashboard():
     if upload_file is None:
         return
     pbar = st.progress(0, "Save upload")
-    if is_archive(st.session_state.upload):
+    if is_archive(st.session_state.upload_orig):
         path_to_audio = audio_from_zip(upload_file)
         st.session_state.beatmap_upload = upload_file
         st.session_state.upload = path_to_audio
@@ -42,7 +42,9 @@ def render_dashboard():
         st.session_state.upload = path_to_audio
     pbar.progress(100, "")
     pbar.empty()
-    nn_re = nn_audio_processing()
+    nn_bpm, nn_confidence, nn_beats_position, nn_hist, nn_intervals, nn_metronom = (
+        nn_audio_processing()
+    )
     if st.session_state.classic_on:
         (
             dynamic_bpm,
@@ -52,14 +54,10 @@ def render_dashboard():
             music_y,
             music_sr,
         ) = audio_processing()
-    nn_metro = tempo.nn_metronom(
-        st.session_state.upload, nn_re[2], st.session_state.volume
-    )
-    nn_intervals = tempo.nn_intervals(nn_re[2], nn_re[3])
 
     with st.container(border=True):
         st.write("NN metronom")
-        st.audio(nn_metro)
+        st.audio(nn_metronom)
         if st.session_state.classic_on:
             st.write(t["audio_clicks"])
             st.audio(music_y, sample_rate=music_sr)
@@ -132,32 +130,16 @@ def render_dashboard():
     with nn_tab:
         col_nn_average, col_nn_onset, col_nn_confidence = st.columns(3, border=True)
         with col_nn_average:
-            st.metric("Major BPM", round(nn_re[0], 2))
+            st.metric("BPM", round(nn_bpm, 2))
         with col_nn_onset:
             st.metric(
                 t["first_onset"],
-                str(round(nn_re[2][0] * 1000)).replace(".", ","),
+                str(round(nn_beats_position[0] * 1000)).replace(".", ","),
             )
         with col_nn_confidence:
-            st.metric("Confidence in BPM", round(nn_re[1], 4))
-        ic = interpert_confidence(nn_re[1])
+            st.metric("Confidence in BPM", round(nn_confidence, 4))
+        ic = interpert_confidence(nn_confidence)
         st.info(ic[1:], icon=ic[0])
-        with st.container(border=True):
-            histogram = nn_re[5]
-            bpm_bins = list(range(len(histogram)))
-            data = {
-                "BPM": bpm_bins,
-                "Weight": histogram,
-            }
-            fig = px.bar(
-                data,
-                x="BPM",
-                y="Weight",
-                title="BPM Histogram",
-                labels={"BPM": "BPM", "Weight": "Weight"},
-            )
-            fig.update_traces(marker_color="#003399")
-            st.plotly_chart(fig)
         with st.container(border=True):
             x = []
             y = []
@@ -176,6 +158,22 @@ def render_dashboard():
                 labels={"x": t["time"] + " (s)", "y": "BPM"},
             )
             fig.update_traces(line=dict(color="#003399"))
+            st.plotly_chart(fig)
+        with st.expander("BPM distribution"):
+            histogram = nn_hist
+            bpm_bins = list(range(len(histogram)))
+            data = {
+                "BPM": bpm_bins,
+                "Weight": histogram,
+            }
+            fig = px.bar(
+                data,
+                x="BPM",
+                y="Weight",
+                title="BPM Histogram",
+                labels={"BPM": "BPM", "Weight": "Weight"},
+            )
+            fig.update_traces(marker_color="#003399")
             st.plotly_chart(fig)
         with st.expander("Timings" + f" ({len(nn_intervals)})"):
             data = {t["time"]: [], "BPM": []}
@@ -230,7 +228,7 @@ def render_dashboard():
                     data=insert_choise(nn_intervals),
                     file_name=st.session_state.beatmap_upload.name,
                     mime=st.session_state.beatmap_upload.type,
-                    key="download_uploaded_beatmap",
+                    key="download_uploaded_beatmap_nn",
                 )
     with general:
         col_info, col_image = st.columns([1, 2], border=True)
@@ -321,11 +319,23 @@ def audio_processing():
 
 def nn_audio_processing():
     t = translation(st.session_state.get("language", "en"))
-    pbar = st.progress(0, "Load 1")
-    nn_re = tempo.re(st.session_state.upload, sample_rate=st.session_state.sample_rate)
+    pbar = st.progress(0, "Beat Detection")
+    nn_bpm, nn_confidence, nn_beats_position, nn_hist = tempo.re(
+        st.session_state.upload, sample_rate=st.session_state.sample_rate
+    )
+    pbar.progress(50, "Calc intervals")
+    nn_intervals = tempo.nn_intervals(nn_beats_position)
+    pbar.progress(70, "Calc metronom")
+    nn_metronom = tempo.nn_metronom(
+        st.session_state.upload,
+        nn_beats_position,
+        st.session_state.volume,
+        st.session_state.click_freq,
+        st.session_state.click_duration,
+    )
     pbar.progress(100, "")
     pbar.empty()
-    return nn_re
+    return nn_bpm, nn_confidence, nn_beats_position, nn_hist, nn_intervals, nn_metronom
 
 
 def insert_choise(intervals):
