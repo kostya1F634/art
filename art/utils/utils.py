@@ -37,10 +37,12 @@ def audio_from_zip(zip_path: str, audio_filename: str = "audio.mp3") -> str:
         file_list = zip_ref.namelist()
         if audio_filename not in file_list:
             raise FileNotFoundError(f"{audio_filename} not found in the archive.")
-        temp_dir = "temp_audio"
-        os.makedirs(temp_dir, exist_ok=True)
-        zip_ref.extract(audio_filename, temp_dir)
-        return os.path.join(temp_dir, audio_filename)
+
+        with zip_ref.open(audio_filename) as audio_file:
+            suffix = f".{audio_filename.split('.')[-1]}"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                shutil.copyfileobj(audio_file, tmp)
+                return tmp.name
 
 
 def is_archive(file):
