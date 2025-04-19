@@ -28,23 +28,3 @@ def re(file, sample_rate=44100):
         histogram,
     ) = rhythm_descriptor(audio)
     return bpm, confidence, beats_position, bpm_estimates, bpm_intervals, histogram
-
-
-@st.cache_data
-def nn_intervals(ticks, trashold=0):
-    intervals = []
-    start = ticks[0]
-    curr_bpm = 60 / (ticks[1] - ticks[0])
-    for i in range(1, len(ticks) - 1):
-        tmp_bpm = 60 / (ticks[i + 1] - ticks[i])
-        if abs(round(curr_bpm, 2) - round(tmp_bpm, 2)) > trashold:
-            intervals += [[start, curr_bpm]]
-            start = ticks[i]
-            curr_bpm = tmp_bpm
-    intervals += [[start, curr_bpm]]
-    times = []
-    bpms = []
-    for time, bpm in intervals:
-        times += [time]
-        bpms += [bpm]
-    return times, bpms
