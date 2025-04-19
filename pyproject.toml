@@ -11,6 +11,7 @@ dependencies = [
     "mutagen>=1.47.0",
     "numpy<2.0",
     "plotly>=6.0.1",
+    "pydub>=0.25.1",
     "pytest>=8.3.5",
     "python-magic>=0.4.27",
     "streamlit>=1.43.2",

@@ -25,6 +25,26 @@ def render_sidebar():
         step=10000,
         key="sample_rate",
     )
+    st.sidebar.subheader(t["music"], divider="grey")
+    st.sidebar.slider(
+        t["volume"],
+        value=20,
+        help=t["volume_help"],
+        key="volume",
+    )
+    st.sidebar.number_input(
+        t["click_frequency"],
+        value=350.0,
+        help=t["click_frequency_help"],
+        step=10.0,
+        key="click_freq",
+    )
+    st.sidebar.number_input(
+        t["click_duration"],
+        value=0.1,
+        help=t["click_duration_help"],
+        key="click_duration",
+    )
     if st.session_state.get("upload", None) is None or not st.session_state.classic_on:
         return
 
@@ -56,26 +76,6 @@ def render_sidebar():
         value=True,
         help=t["twoh"],
         key="trim",
-    )
-    st.sidebar.subheader(t["music"], divider="grey")
-    st.sidebar.slider(
-        t["volume"],
-        value=20,
-        help=t["volume_help"],
-        key="volume",
-    )
-    st.sidebar.number_input(
-        t["click_frequency"],
-        value=350.0,
-        help=t["click_frequency_help"],
-        step=10.0,
-        key="click_freq",
-    )
-    st.sidebar.number_input(
-        t["click_duration"],
-        value=0.1,
-        help=t["click_duration_help"],
-        key="click_duration",
     )
     st.sidebar.subheader(t["advanced_parameters"], divider="grey")
     st.sidebar.number_input(

@@ -16,14 +16,9 @@ def render_dashboard():
         upload_file = st.file_uploader(
             t["choose_file"],
             type=[
-                "wav",
                 "mp3",
-                "flac",
+                "wav",
                 "ogg",
-                "m4a",
-                "wma",
-                "aiff",
-                "aif",
                 "olz",
                 "osz",
                 "osu",
@@ -57,10 +52,18 @@ def render_dashboard():
             music_y,
             music_sr,
         ) = audio_processing()
-    if st.session_state.classic_on:
-        with st.container(border=True):
+    nn_metro = tempo.nn_metronom(
+        st.session_state.upload, nn_re[2], st.session_state.volume
+    )
+    nn_intervals = tempo.nn_intervals(nn_re[2], nn_re[3])
+
+    with st.container(border=True):
+        st.write("NN metronom")
+        st.audio(nn_metro)
+        if st.session_state.classic_on:
             st.write(t["audio_clicks"])
             st.audio(music_y, sample_rate=music_sr)
+
     nn_tab, c_tab, beatmap, general = st.tabs(
         [
             t["nn_method"],
@@ -83,7 +86,7 @@ def render_dashboard():
                     str(round(onset_times[0] * 1000)).replace(".", ","),
                 )
             with col_changes:
-                st.metric(t["bpm_change"], len(intervals) - 1)
+                st.metric(t["bpm_change"], len(onset_times) - 1)
             with st.container(border=True):
                 x, y = onset_times, onset_bpm
                 data = {
@@ -118,9 +121,9 @@ def render_dashboard():
                 )
                 fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
-            with st.expander(t["timings"] + f" ({len(intervals)})"):
+            with st.expander(t["timings"] + f" ({len(onset_times)})"):
                 data = {t["time"]: [], "BPM": []}
-                for start, bpm in intervals:
+                for start, bpm in zip(onset_times, onset_bpm):
                     data[t["time"]] += [f"{start:.3f}".replace(".", ",")]
                     data["BPM"] += [str(round(bpm, 2))]
                 st.table(data)
@@ -139,21 +142,47 @@ def render_dashboard():
             st.metric("Confidence in BPM", round(nn_re[1], 4))
         ic = interpert_confidence(nn_re[1])
         st.info(ic[1:], icon=ic[0])
-        histogram = nn_re[5]
-        bpm_bins = list(range(len(histogram)))
-        data = {
-            "BPM": bpm_bins,
-            "Weight": histogram,
-        }
-        fig = px.bar(
-            data,
-            x="BPM",
-            y="Weight",
-            title="BPM Histogram",
-            labels={"BPM": "BPM", "Weight": "Weight"},
-        )
-        fig.update_traces(marker_color="#003399")
-        st.plotly_chart(fig)
+        with st.container(border=True):
+            histogram = nn_re[5]
+            bpm_bins = list(range(len(histogram)))
+            data = {
+                "BPM": bpm_bins,
+                "Weight": histogram,
+            }
+            fig = px.bar(
+                data,
+                x="BPM",
+                y="Weight",
+                title="BPM Histogram",
+                labels={"BPM": "BPM", "Weight": "Weight"},
+            )
+            fig.update_traces(marker_color="#003399")
+            st.plotly_chart(fig)
+        with st.container(border=True):
+            x = []
+            y = []
+            for i, j in nn_intervals:
+                x += [i]
+                y += [j]
+            data = {
+                "x": x,
+                "y": y,
+            }
+            fig = px.line(
+                data,
+                x="x",
+                y="y",
+                title=t["bpm_dynamic"],
+                labels={"x": t["time"] + " (s)", "y": "BPM"},
+            )
+            fig.update_traces(line=dict(color="#003399"))
+            st.plotly_chart(fig)
+        with st.expander("Timings" + f" ({len(nn_intervals)})"):
+            data = {t["time"]: [], "BPM": []}
+            for start, bpm in nn_intervals:
+                data[t["time"]] += [f"{start:.3f}".replace(".", ",")]
+                data["BPM"] += [str(round(bpm, 2))]
+            st.table(data)
     with beatmap:
         with st.container(border=True):
             if st.session_state.beatmap_upload is None:
@@ -175,22 +204,34 @@ def render_dashboard():
                 if st.session_state.classic_on:
                     st.download_button(
                         label=t["c_timings"],
-                        data=osu_beatmap(intervals),
+                        data=osu_beatmap(zip(onset_times, onset_bpm)),
                         file_name=osu_name,
                         mime="application/zip",
                         key="download_new_beatmap",
                     )
+                st.download_button(
+                    label=t["nn_timings"],
+                    data=osu_beatmap(nn_intervals),
+                    file_name=osu_name,
+                    mime="application/zip",
+                    key="download_new_beatmap_nn",
+                )
             else:
                 if st.session_state.classic_on:
                     st.download_button(
                         label=t["c_timings"],
-                        data=insert_choise(intervals),
+                        data=insert_choise(zip(onset_times, onset_bpm)),
                         file_name=st.session_state.beatmap_upload.name,
                         mime=st.session_state.beatmap_upload.type,
                         key="download_uploaded_beatmap",
                     )
-            # if st.button(t["nn_timings"], key="nn_download"):
-            #     pass
+                st.download_button(
+                    label=t["nn_timings"],
+                    data=insert_choise(nn_intervals),
+                    file_name=st.session_state.beatmap_upload.name,
+                    mime=st.session_state.beatmap_upload.type,
+                    key="download_uploaded_beatmap",
+                )
     with general:
         col_info, col_image = st.columns([1, 2], border=True)
         with col_image:
@@ -265,8 +306,6 @@ def audio_processing():
         audio,
         dynamic_clicks,
         volume=st.session_state.volume,
-        click_freq=st.session_state.click_freq,
-        click_duration=st.session_state.click_duration,
     )
     pbar.progress(100, "")
     pbar.empty()

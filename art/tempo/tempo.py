@@ -64,8 +64,6 @@ def music(
     audio,
     dynamic_clicks,
     volume=20,
-    click_freq=660.0,
-    click_duration=0.1,
 ):
     y, sr = audio
     click_dynamic = dynamic_clicks
