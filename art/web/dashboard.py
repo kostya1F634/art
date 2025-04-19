@@ -32,19 +32,18 @@ def render_dashboard():
         if st.session_state.upload_orig != upload_file:
             st.session_state.upload_orig = upload_file
             st.session_state.upload = upload_file
+            if is_archive(st.session_state.upload):
+                path_to_audio = audio_from_zip(upload_file)
+                st.session_state.beatmap_upload = upload_file
+                st.session_state.upload = path_to_audio
+            else:
+                path_to_audio = save_file(upload_file)
+                st.session_state.beatmap_upload = None
+                st.session_state.upload = path_to_audio
             st.rerun()
 
     if upload_file is None:
         return
-    if is_archive(st.session_state.upload):
-        path_to_audio = audio_from_zip(upload_file)
-        st.session_state.beatmap_upload = upload_file
-        st.session_state.upload = path_to_audio
-    else:
-        path_to_audio = save_file(upload_file)
-        st.session_state.beatmap_upload = None
-        st.session_state.upload = path_to_audio
-
     nn_re = nn_audio_processing()
     if st.session_state.classic_on:
         (
