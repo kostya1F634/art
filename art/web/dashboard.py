@@ -32,17 +32,18 @@ def render_dashboard():
         if st.session_state.upload_orig != upload_file:
             st.session_state.upload_orig = upload_file
             st.session_state.upload = upload_file
-            if is_archive(st.session_state.upload):
-                path_to_audio = audio_from_zip(upload_file)
-                st.session_state.beatmap_upload = upload_file
-                st.session_state.upload = path_to_audio
-            else:
-                path_to_audio = save_file(upload_file)
-                st.session_state.beatmap_upload = None
-                st.session_state.upload = path_to_audio
             st.rerun()
+
     if upload_file is None:
         return
+    if is_archive(st.session_state.upload):
+        path_to_audio = audio_from_zip(upload_file)
+        st.session_state.beatmap_upload = upload_file
+        st.session_state.upload = path_to_audio
+    else:
+        path_to_audio = save_file(upload_file)
+        st.session_state.beatmap_upload = None
+        st.session_state.upload = path_to_audio
 
     nn_re = nn_audio_processing()
     if st.session_state.classic_on:
@@ -54,8 +55,6 @@ def render_dashboard():
             music_y,
             music_sr,
         ) = audio_processing()
-        time_diffs = np.diff(onset_times)
-        score = complexity_score(dynamic_bpm, intervals[-1][1], time_diffs)
     if st.session_state.classic_on:
         with st.container(border=True):
             st.write(t["audio_clicks"])
@@ -83,8 +82,8 @@ def render_dashboard():
                 )
             with col_score:
                 st.metric(
-                    t["complexity_score"] + " " + interpret_score(score)[0],
-                    score,
+                    t["complexity_score"],
+                    round(nn_re[1], 4),
                 )
             with col_changes:
                 st.metric(t["bpm_change"], len(intervals) - 1)
@@ -105,6 +104,7 @@ def render_dashboard():
                 st.plotly_chart(fig)
 
             with st.expander(t["time_intervals"]):
+                time_diffs = np.diff(onset_times)
                 data = {
                     "x": onset_times[1:],
                     "y": time_diffs,
@@ -139,31 +139,9 @@ def render_dashboard():
                 str(round(nn_re[2][0], 3)).replace(".", ","),
             )
         with col_nn_confidence:
-            st.metric(
-                f"Confidence {interpert_confidence(nn_re[1])[0]}", round(nn_re[1], 4)
-            )
-        nn_intervals = tempo.nn_intervals(nn_re[2], trashold=1)
-        with st.container(border=True):
-            x, y = nn_intervals
-            data = {
-                "x": x,
-                "y": y,
-            }
-            fig = px.line(
-                data,
-                x="x",
-                y="y",
-                title=t["bpm_dynamic"],
-                labels={"x": t["time"] + " (s)", "y": "BPM"},
-            )
-            fig.update_traces(line=dict(color="#003399"))
-            st.plotly_chart(fig)
-        with st.expander(t["timings"] + f" ({len(nn_intervals[0])})"):
-            nn_data = {t["time"]: [], "BPM": []}
-            for start, bpm in zip(nn_intervals[0], nn_intervals[1]):
-                nn_data[t["time"]] += [f"{start:.3f}".replace(".", ",")]
-                nn_data["BPM"] += [str(round(bpm, 2))]
-            st.table(nn_data)
+            st.metric("Confidence in BPM", round(nn_re[1], 4))
+        ic = interpert_confidence(nn_re[1])
+        st.info(ic[1:], icon=ic[0])
         histogram = nn_re[5]
         bpm_bins = list(range(len(histogram)))
         data = {
@@ -214,59 +192,16 @@ def render_dashboard():
                         mime=st.session_state.beatmap_upload.type,
                         key="download_uploaded_beatmap",
                     )
-            if st.button(t["nn_timings"], key="nn_download"):
-                pass
+            # if st.button(t["nn_timings"], key="nn_download"):
+            #     pass
     with general:
-        col_info, col_image = st.columns(2, border=True)
-        with col_info:
-            if st.session_state.classic_on:
-                std_dev = np.std(dynamic_bpm)
-                if std_dev < 2:
-                    rhythmic_variance = t["low"]
-                elif std_dev < 10:
-                    rhythmic_variance = t["moderate"]
-                else:
-                    rhythmic_variance = t["high"]
-                min_bpm = round(np.min(dynamic_bpm), 2)
-                max_bpm = round(np.max(dynamic_bpm), 2)
-                description = interpret_score(score)
-                st.metric(t["complexity_score"], score)
-                st.write(description)
-                st.divider()
-                st.write(f"{t['average']} BPM: {round(np.mean(dynamic_bpm), 2)}")
-                st.divider()
-                st.write(f"{t['bpm_range']}: {min_bpm} -> {max_bpm}")
-                st.divider()
-                st.write(f"{t['rhythmic_variance']}: {rhythmic_variance}")
+        col_info, col_image = st.columns([1, 2], border=True)
         with col_image:
-            cover_data = cover_from_audio(st.session_state.upload)
+            cover_data = cover_from_audio(st.session_state.upload_orig)
             if cover_data:
                 st.image(cover_data)
             else:
                 st.info(t["no_track_cover"])
-
-
-def complexity_score(bpm_values, duration_sec, time_diffs):
-    bpm_values = np.array(bpm_values)
-    time_diffs = np.array(time_diffs)
-    std_time = np.std(time_diffs)
-    std_bpm = np.std(bpm_values)
-    tempo_changes = np.sum(np.abs(np.diff(bpm_values)) > 3)
-    change_rate = tempo_changes / duration_sec
-    jitter = np.sum(np.diff(np.sign(np.diff(bpm_values))) != 0) / len(bpm_values)
-    bpm_range = np.max(bpm_values) - np.min(bpm_values)
-    acceleration = (bpm_values[-1] - bpm_values[0]) / duration_sec
-    local_var = local_variability(bpm_values)
-    score = (
-        0.2 * std_time * 50
-        + 0.2 * std_bpm
-        + 0.2 * change_rate * 10
-        + 0.15 * jitter * 10
-        + 0.1 * bpm_range / 10
-        + 0.1 * abs(acceleration)
-        + 0.1 * local_var
-    )
-    return round(score, 2)
 
 
 def local_variability(bpm_values, window_size=5):
@@ -277,22 +212,6 @@ def local_variability(bpm_values, window_size=5):
         if len(bpm_values[i * window_size : (i + 1) * window_size]) > 1
     ]
     return np.mean(local_std) if local_std else 0
-
-
-def interpret_score(score):
-    td = translation(st.session_state.get("language", "en"))
-    if score < 3:
-        return "🟢 " + td["very_simple"]
-    elif score < 5:
-        return "🟢🟡 " + td["simple_groove"]
-    elif score < 7:
-        return "🟡 " + td["moderately_complex"]
-    elif score < 9:
-        return "🟠 " + td["complex"]
-    elif score < 11:
-        return "🔴 " + td["highly_complex"]
-    else:
-        return "🔴🔴 " + td["ultra_complex"]
 
 
 def interpert_confidence(confidence):
