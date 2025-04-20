@@ -6,9 +6,7 @@ ART provides a web interface to analyze dynamic BPM and export beatmaps with it
 * 📥 Add timings in your beatmap
 * 📈 Charts of BPM
 
-![nn_app_image](https://github.com/user-attachments/assets/571314b9-325a-4a9f-ac81-241c1c54a934)
-![art_main_page_image](https://github.com/user-attachments/assets/4ea27e86-4c06-4ec3-9ca4-0d1286221496)
-![art_download_beatmap_image](https://github.com/user-attachments/assets/a4834968-cb7f-4a25-b80d-74bb69d214e1)
+![app_main_page_image](https://github.com/user-attachments/assets/71d25870-0f41-4e1c-8810-8f2f77e949b3)
 
 ## Requirements
 * git
