@@ -58,12 +58,13 @@ def render_dashboard():
         ) = audio_processing()
 
     with st.container(border=True):
-        if os.name != "nt":
-            st.write(t["nn_metronom"])
-            st.audio(nn_metronom)
-        if st.session_state.classic_on:
-            st.write(t["audio_clicks"])
-            st.audio(music_y, sample_rate=music_sr)
+        if st.session_state.metronome_on:
+            if os.name != "nt":
+                st.write(t["nn_metronom"])
+                st.audio(nn_metronom)
+            if st.session_state.classic_on:
+                st.write(t["audio_clicks"])
+                st.audio(music_y, sample_rate=music_sr)
 
     nn_tab, c_tab, beatmap, general = st.tabs(
         [
@@ -325,13 +326,16 @@ def nn_audio_processing():
     pbar.progress(50, t["calc_intervals"])
     nn_intervals = tempo.nn_intervals(nn_beats_position)
     pbar.progress(70, t["calc_metronome"])
-    nn_metronom = tempo.nn_metronom(
-        st.session_state.upload,
-        nn_beats_position,
-        st.session_state.volume,
-        st.session_state.click_freq,
-        st.session_state.click_duration,
-    )
+    if st.session_state.metronome_on:
+        nn_metronom = tempo.nn_metronom(
+            st.session_state.upload,
+            nn_beats_position,
+            st.session_state.volume,
+            st.session_state.click_freq,
+            st.session_state.click_duration,
+        )
+    else:
+        nn_metronom = None
     pbar.progress(100, "")
     pbar.empty()
     return nn_bpm, nn_confidence, nn_beats_position, nn_hist, nn_intervals, nn_metronom

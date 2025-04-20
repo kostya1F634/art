@@ -97,7 +97,7 @@
     "bpm_dist": "BPM Distribution",
     "bpm_hist": "BPM Histogram",
     "weight": "Weight",
-    "beat_detection": "Beat Detection",
+    "beat_detection": "Beat detection",
     "calc_intervals": "Calculating beats bpm",
     "calc_metronome": "Generating metronome overlay",
     "very_low_confidence": "Very low confidence — the algorithm struggles to detect a clear rhythm. The bpm may be inconsistent or unclear.",

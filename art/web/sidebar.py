@@ -24,29 +24,30 @@ def render_sidebar():
         step=10000,
         key="sample_rate",
     )
-    st.sidebar.subheader(t["music"], divider="grey")
-    st.sidebar.slider(
-        t["volume"],
-        value=20,
-        help=t["volume_help"],
-        key="volume",
-    )
-    st.sidebar.number_input(
-        t["click_frequency"],
-        value=350.0,
-        help=t["click_frequency_help"],
-        step=10.0,
-        key="click_freq",
-    )
-    st.sidebar.number_input(
-        t["click_duration"],
-        value=0.1,
-        help=t["click_duration_help"],
-        key="click_duration",
-    )
+    st.sidebar.toggle("Turn on auido with metronome", value=False, key="metronome_on")
+    if st.session_state.metronome_on:
+        st.sidebar.subheader(t["music"], divider="grey")
+        st.sidebar.slider(
+            t["volume"],
+            value=20,
+            help=t["volume_help"],
+            key="volume",
+        )
+        st.sidebar.number_input(
+            t["click_frequency"],
+            value=350.0,
+            help=t["click_frequency_help"],
+            step=10.0,
+            key="click_freq",
+        )
+        st.sidebar.number_input(
+            t["click_duration"],
+            value=0.1,
+            help=t["click_duration_help"],
+            key="click_duration",
+        )
     if st.session_state.get("upload", None) is None or not st.session_state.classic_on:
         return
-
     st.sidebar.subheader(t["parameters"], divider="grey")
     st.sidebar.number_input(
         t["hop_length"],
