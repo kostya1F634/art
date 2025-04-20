@@ -1,11 +1,10 @@
 [theme]
 base = "light"
-primaryColor = "#9FB3DF"             # Приглушенный сине-зеленый для основного акцента
-backgroundColor = "#F1F0E8"          # Очень светлый, почти бумажный фон, напоминающий тетрадный лист
-secondaryBackgroundColor = "#E5E1DA" # Теплый светло-бежевый для фона интерактивных элементов
-textColor = "#474a51"                # Стандартный темный цвет для читаемого текста
-linkColor = "#B3C8CF"                # Светлый прохладный оттенок для выделения ссылок
+primaryColor = "#9FB3DF"             
+backgroundColor = "#F1F0E8"          
+secondaryBackgroundColor = "#E5E1DA" 
+textColor = "#474a51"                
+linkColor = "#B3C8CF"                
 
-borderColor="#9FB3DF"
 
 

@@ -102,7 +102,6 @@ def render_dashboard():
                     title=t["bpm_dynamic"],
                     labels={"x": t["time"], "y": "BPM"},
                 )
-                fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
 
             with st.expander(t["time_intervals"]):
@@ -121,7 +120,6 @@ def render_dashboard():
                         "y": t["time_between_onsets"],
                     },
                 )
-                fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
             with st.expander(t["timings"] + f" ({len(onset_times)})"):
                 data = {t["time"]: [], "BPM": []}
@@ -162,7 +160,6 @@ def render_dashboard():
                     title=t["bpm_dynamic"],
                     labels={"x": t["time"], "y": "BPM"},
                 )
-                fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
             with st.expander(t["bpm_dist"]):
                 histogram = nn_hist
@@ -178,7 +175,6 @@ def render_dashboard():
                     title=t["bpm_hist"],
                     labels={"BPM": "BPM", "Weight": "Weight"},
                 )
-                fig.update_traces(marker_color="#003399")
                 st.plotly_chart(fig)
             with st.expander(t["timings"] + f" ({len(nn_intervals)})"):
                 data = {t["time"]: [], "BPM": []}
