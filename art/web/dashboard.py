@@ -213,13 +213,14 @@ def render_dashboard():
                         mime="application/zip",
                         key="download_new_beatmap",
                     )
-                st.download_button(
-                    label=t["nn_timings"],
-                    data=osu_beatmap(nn_intervals),
-                    file_name=osu_name,
-                    mime="application/zip",
-                    key="download_new_beatmap_nn",
-                )
+                if os.name != "nt":
+                    st.download_button(
+                        label=t["nn_timings"],
+                        data=osu_beatmap(nn_intervals),
+                        file_name=osu_name,
+                        mime="application/zip",
+                        key="download_new_beatmap_nn",
+                    )
             else:
                 if st.session_state.classic_on:
                     st.download_button(
@@ -229,13 +230,14 @@ def render_dashboard():
                         mime=st.session_state.beatmap_upload.type,
                         key="download_uploaded_beatmap",
                     )
-                st.download_button(
-                    label=t["nn_timings"],
-                    data=insert_choise(nn_intervals),
-                    file_name=st.session_state.beatmap_upload.name,
-                    mime=st.session_state.beatmap_upload.type,
-                    key="download_uploaded_beatmap_nn",
-                )
+                if os.name != "nt":
+                    st.download_button(
+                        label=t["nn_timings"],
+                        data=insert_choise(nn_intervals),
+                        file_name=st.session_state.beatmap_upload.name,
+                        mime=st.session_state.beatmap_upload.type,
+                        key="download_uploaded_beatmap_nn",
+                    )
     with general:
         col_info, col_image = st.columns([1, 2], border=True)
         with col_image:
