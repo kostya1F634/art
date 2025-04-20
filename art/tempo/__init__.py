@@ -1,3 +1,5 @@
+import os
+
 from .tempo import (
     audio,
     dynamic_tempo,
@@ -8,4 +10,6 @@ from .tempo import (
     onset_bpm,
     onset_times,
 )
-from .nn_tempo import re, nn_metronom, nn_intervals
+
+if os.name != "nt":
+    from .nn_tempo import re, nn_metronom, nn_intervals

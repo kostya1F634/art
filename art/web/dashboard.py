@@ -1,4 +1,4 @@
-import sys
+import os
 from translation import translation
 from utils import cover_from_audio, audio_from_zip, is_archive, save_file
 from timings import insert_timing_points, create_beatmap
@@ -42,9 +42,11 @@ def render_dashboard():
         st.session_state.upload = path_to_audio
     pbar.progress(100, "")
     pbar.empty()
-    nn_bpm, nn_confidence, nn_beats_position, nn_hist, nn_intervals, nn_metronom = (
-        nn_audio_processing()
-    )
+
+    if os.name != "nt":
+        nn_bpm, nn_confidence, nn_beats_position, nn_hist, nn_intervals, nn_metronom = (
+            nn_audio_processing()
+        )
     if st.session_state.classic_on:
         (
             dynamic_bpm,
@@ -128,59 +130,62 @@ def render_dashboard():
         else:
             st.write(t["turn_on_classic"])
     with nn_tab:
-        col_nn_average, col_nn_onset, col_nn_confidence = st.columns(3, border=True)
-        with col_nn_average:
-            st.metric("BPM", round(nn_bpm, 2))
-        with col_nn_onset:
-            st.metric(
-                t["first_onset"],
-                str(round(nn_beats_position[0] * 1000)).replace(".", ","),
-            )
-        with col_nn_confidence:
-            st.metric(t["confidence"], round(nn_confidence, 4))
-        ic = interpert_confidence(nn_confidence)
-        st.info(ic[1:], icon=ic[0])
-        with st.container(border=True):
-            x = []
-            y = []
-            for i, j in nn_intervals:
-                x += [i]
-                y += [j]
-            data = {
-                "x": x,
-                "y": y,
-            }
-            fig = px.line(
-                data,
-                x="x",
-                y="y",
-                title=t["bpm_dynamic"],
-                labels={"x": t["time"], "y": "BPM"},
-            )
-            fig.update_traces(line=dict(color="#003399"))
-            st.plotly_chart(fig)
-        with st.expander(t["bpm_dist"]):
-            histogram = nn_hist
-            bpm_bins = list(range(len(histogram)))
-            data = {
-                "BPM": bpm_bins,
-                t["weight"]: histogram,
-            }
-            fig = px.bar(
-                data,
-                x="BPM",
-                y=t["weight"],
-                title=t["bpm_hist"],
-                labels={"BPM": "BPM", "Weight": "Weight"},
-            )
-            fig.update_traces(marker_color="#003399")
-            st.plotly_chart(fig)
-        with st.expander(t["timings"] + f" ({len(nn_intervals)})"):
-            data = {t["time"]: [], "BPM": []}
-            for start, bpm in nn_intervals:
-                data[t["time"]] += [f"{start:.3f}".replace(".", ",")]
-                data["BPM"] += [str(round(bpm, 2))]
-            st.table(data)
+        if os.name != "nt":
+            col_nn_average, col_nn_onset, col_nn_confidence = st.columns(3, border=True)
+            with col_nn_average:
+                st.metric("BPM", round(nn_bpm, 2))
+            with col_nn_onset:
+                st.metric(
+                    t["first_onset"],
+                    str(round(nn_beats_position[0] * 1000)).replace(".", ","),
+                )
+            with col_nn_confidence:
+                st.metric(t["confidence"], round(nn_confidence, 4))
+            ic = interpert_confidence(nn_confidence)
+            st.info(ic[1:], icon=ic[0])
+            with st.container(border=True):
+                x = []
+                y = []
+                for i, j in nn_intervals:
+                    x += [i]
+                    y += [j]
+                data = {
+                    "x": x,
+                    "y": y,
+                }
+                fig = px.line(
+                    data,
+                    x="x",
+                    y="y",
+                    title=t["bpm_dynamic"],
+                    labels={"x": t["time"], "y": "BPM"},
+                )
+                fig.update_traces(line=dict(color="#003399"))
+                st.plotly_chart(fig)
+            with st.expander(t["bpm_dist"]):
+                histogram = nn_hist
+                bpm_bins = list(range(len(histogram)))
+                data = {
+                    "BPM": bpm_bins,
+                    t["weight"]: histogram,
+                }
+                fig = px.bar(
+                    data,
+                    x="BPM",
+                    y=t["weight"],
+                    title=t["bpm_hist"],
+                    labels={"BPM": "BPM", "Weight": "Weight"},
+                )
+                fig.update_traces(marker_color="#003399")
+                st.plotly_chart(fig)
+            with st.expander(t["timings"] + f" ({len(nn_intervals)})"):
+                data = {t["time"]: [], "BPM": []}
+                for start, bpm in nn_intervals:
+                    data[t["time"]] += [f"{start:.3f}".replace(".", ",")]
+                    data["BPM"] += [str(round(bpm, 2))]
+                st.table(data)
+        else:
+            st.write("Use linux / macOS")
     with beatmap:
         with st.container(border=True):
             if st.session_state.beatmap_upload is None:
