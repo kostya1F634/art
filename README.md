@@ -9,6 +9,7 @@ ART provides a web interface to analyze dynamic BPM and export beatmaps with it
 ![app_main_page_image](https://github.com/user-attachments/assets/71d25870-0f41-4e1c-8810-8f2f77e949b3)
 
 ## Requirements
+* ffmpeg (linux and neural network)
 * git
 * uv
 * make (not necessary)
