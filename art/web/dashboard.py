@@ -58,8 +58,8 @@ def render_dashboard():
         ) = audio_processing()
 
     with st.container(border=True):
-        st.write(t["nn_metronom"])
         if os.name != "nt":
+            st.write(t["nn_metronom"])
             st.audio(nn_metronom)
         if st.session_state.classic_on:
             st.write(t["audio_clicks"])
