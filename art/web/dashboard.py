@@ -59,7 +59,8 @@ def render_dashboard():
 
     with st.container(border=True):
         st.write(t["nn_metronom"])
-        st.audio(nn_metronom)
+        if os.name != "nt":
+            st.audio(nn_metronom)
         if st.session_state.classic_on:
             st.write(t["audio_clicks"])
             st.audio(music_y, sample_rate=music_sr)
