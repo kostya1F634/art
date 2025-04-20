@@ -12,9 +12,8 @@ def render_sidebar():
         key="language",
     )
     st.sidebar.toggle(
-        'Turn on "Classic method"',
+        t["turn_on_classic"],
         value=False,
-        help='Turn on "Classic method"',
         key="classic_on",
     )
     st.sidebar.number_input(
@@ -77,7 +76,6 @@ def render_sidebar():
         help=t["twoh"],
         key="trim",
     )
-    st.sidebar.subheader(t["advanced_parameters"], divider="grey")
     st.sidebar.number_input(
         t["start_bpm"],
         value=120.0,

@@ -31,7 +31,7 @@ def render_dashboard():
 
     if upload_file is None:
         return
-    pbar = st.progress(0, "Save upload")
+    pbar = st.progress(0, t["create_tmp"])
     if is_archive(st.session_state.upload_orig):
         path_to_audio = audio_from_zip(upload_file)
         st.session_state.beatmap_upload = upload_file
@@ -56,7 +56,7 @@ def render_dashboard():
         ) = audio_processing()
 
     with st.container(border=True):
-        st.write("NN metronom")
+        st.write(t["nn_metronom"])
         st.audio(nn_metronom)
         if st.session_state.classic_on:
             st.write(t["audio_clicks"])
@@ -77,7 +77,7 @@ def render_dashboard():
                 unique_bpm, counts = np.unique(dynamic_bpm, return_counts=True)
                 most_common_bpm_index = np.argmax(counts)
                 most_common_bpm = unique_bpm[most_common_bpm_index]
-                st.metric(f"{t['average']} BPM", round(most_common_bpm, 2))
+                st.metric("BPM", round(most_common_bpm, 2))
             with col_onset:
                 st.metric(
                     t["first_onset"],
@@ -96,7 +96,7 @@ def render_dashboard():
                     x="x",
                     y="y",
                     title=t["bpm_dynamic"],
-                    labels={"x": t["time"] + " (s)", "y": "BPM"},
+                    labels={"x": t["time"], "y": "BPM"},
                 )
                 fig.update_traces(line=dict(color="#003399"))
                 st.plotly_chart(fig)
@@ -113,8 +113,8 @@ def render_dashboard():
                     y="y",
                     title=t["time_intervals_between_onsets"],
                     labels={
-                        "x": t["time"] + " (s)",
-                        "y": t["time_between_onsets"] + " (s)",
+                        "x": t["time"],
+                        "y": t["time_between_onsets"],
                     },
                 )
                 fig.update_traces(line=dict(color="#003399"))
@@ -126,7 +126,7 @@ def render_dashboard():
                     data["BPM"] += [str(round(bpm, 2))]
                 st.table(data)
         else:
-            st.write('Turn on "Classic method')
+            st.write(t["turn_on_classic"])
     with nn_tab:
         col_nn_average, col_nn_onset, col_nn_confidence = st.columns(3, border=True)
         with col_nn_average:
@@ -137,7 +137,7 @@ def render_dashboard():
                 str(round(nn_beats_position[0] * 1000)).replace(".", ","),
             )
         with col_nn_confidence:
-            st.metric("Confidence in BPM", round(nn_confidence, 4))
+            st.metric(t["confidence"], round(nn_confidence, 4))
         ic = interpert_confidence(nn_confidence)
         st.info(ic[1:], icon=ic[0])
         with st.container(border=True):
@@ -155,27 +155,27 @@ def render_dashboard():
                 x="x",
                 y="y",
                 title=t["bpm_dynamic"],
-                labels={"x": t["time"] + " (s)", "y": "BPM"},
+                labels={"x": t["time"], "y": "BPM"},
             )
             fig.update_traces(line=dict(color="#003399"))
             st.plotly_chart(fig)
-        with st.expander("BPM distribution"):
+        with st.expander(t["bpm_dist"]):
             histogram = nn_hist
             bpm_bins = list(range(len(histogram)))
             data = {
                 "BPM": bpm_bins,
-                "Weight": histogram,
+                t["weight"]: histogram,
             }
             fig = px.bar(
                 data,
                 x="BPM",
-                y="Weight",
-                title="BPM Histogram",
+                y=t["weight"],
+                title=t["bpm_hist"],
                 labels={"BPM": "BPM", "Weight": "Weight"},
             )
             fig.update_traces(marker_color="#003399")
             st.plotly_chart(fig)
-        with st.expander("Timings" + f" ({len(nn_intervals)})"):
+        with st.expander(t["timings"] + f" ({len(nn_intervals)})"):
             data = {t["time"]: [], "BPM": []}
             for start, bpm in nn_intervals:
                 data[t["time"]] += [f"{start:.3f}".replace(".", ",")]
@@ -240,25 +240,16 @@ def render_dashboard():
                 st.info(t["no_track_cover"])
 
 
-def local_variability(bpm_values, window_size=5):
-    segments = len(bpm_values) // window_size
-    local_std = [
-        np.std(bpm_values[i * window_size : (i + 1) * window_size])
-        for i in range(segments)
-        if len(bpm_values[i * window_size : (i + 1) * window_size]) > 1
-    ]
-    return np.mean(local_std) if local_std else 0
-
-
 def interpert_confidence(confidence):
+    t = translation(st.session_state.get("language", "en"))
     if confidence < 1:
-        return "🔴 very low confidence, the input signal is hard for the employed candidate beat trackers"
+        return "🔴 " + t["very_low_confidence"]
     elif confidence <= 1.5:
-        return "🟠 low confidence"
+        return "🟠 " + t["low_confidence"]
     elif confidence <= 3.5:
-        return "🟡 good confidence, accuracy around 80% in AMLt measure"
+        return "🟡 " + t["good_confidence"]
     else:
-        return "🟢 excellent confidence"
+        return "🟢 " + t["excellent_confidence"]
 
 
 def audio_processing():
@@ -319,13 +310,13 @@ def audio_processing():
 
 def nn_audio_processing():
     t = translation(st.session_state.get("language", "en"))
-    pbar = st.progress(0, "Beat Detection")
+    pbar = st.progress(0, t["beat_detection"])
     nn_bpm, nn_confidence, nn_beats_position, nn_hist = tempo.re(
         st.session_state.upload, sample_rate=st.session_state.sample_rate
     )
-    pbar.progress(50, "Calc intervals")
+    pbar.progress(50, t["calc_intervals"])
     nn_intervals = tempo.nn_intervals(nn_beats_position)
-    pbar.progress(70, "Calc metronom")
+    pbar.progress(70, t["calc_metronome"])
     nn_metronom = tempo.nn_metronom(
         st.session_state.upload,
         nn_beats_position,
