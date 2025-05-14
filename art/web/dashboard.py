@@ -288,19 +288,23 @@ def audio_processing():
     pbar.progress(65, t["detecting_intervals"])
     intervals = tempo.intervals(onset_bpm, onset_times)
     pbar.progress(78, t["generating_clicks"])
-    dynamic_clicks = tempo.dynamic_clicks(
-        audio,
-        onset_times,
-        hop_length=st.session_state.hop_length,
-        click_freq=st.session_state.click_freq,
-        click_duration=st.session_state.click_duration,
-    )
-    pbar.progress(91, t["mixing_audio"])
-    music_y, music_sr = tempo.music(
-        audio,
-        dynamic_clicks,
-        volume=st.session_state.volume,
-    )
+    if st.session_state.metronome_on:
+        dynamic_clicks = tempo.dynamic_clicks(
+            audio,
+            onset_times,
+            hop_length=st.session_state.hop_length,
+            click_freq=st.session_state.click_freq,
+            click_duration=st.session_state.click_duration,
+        )
+        pbar.progress(91, t["mixing_audio"])
+        music_y, music_sr = tempo.music(
+            audio,
+            dynamic_clicks,
+            volume=st.session_state.volume,
+        )
+    else:
+        music_y = None
+        music_sr = None
     pbar.progress(100, "")
     pbar.empty()
     return (
